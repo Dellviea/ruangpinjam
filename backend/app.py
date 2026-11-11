@@ -9,11 +9,10 @@ from werkzeug.security import check_password_hash, generate_password_hash
 
 load_dotenv()
 
-# Dev: Flask ikut menyajikan ../frontend supaya fetch('/api/...') jalan tanpa nginx.
-# Di VM, nginx yang menyajikan frontend dan meneruskan /api ke sini.
+# Saat dev Flask ikut menyajikan frontend. Di VM tugas ini dipegang nginx.
 app = Flask(__name__, static_folder="../frontend", static_url_path="")
 
-# Data disimpan di memori (tanpa database), hilang kalau server restart.
+# Data di memori, hilang saat server restart.
 ruangan = [
     {"id": 1, "kode": "AUL-01", "nama": "Aula Pendopo", "jenis": "Aula", "gedung": "Dekat Lapangan Tenis",
      "lantai": "1", "kapasitas": 200, "fasilitas": ["Proyektor", "Sound system", "AC"],
@@ -40,7 +39,7 @@ ruangan = [
      "jam_buka": "07:00", "jam_tutup": "18:00", "status": "dalam perbaikan",
      "deskripsi": "Sedang perbaikan lantai."},
 ]
-# Password contoh dari .env (PASSWORD_CONTOH); yang disimpan tetap hash-nya.
+# Password contoh dari .env, disimpan sebagai hash.
 _pw = generate_password_hash(os.getenv("PASSWORD_CONTOH", "pinjamruang123"))
 pengguna = [
     {"id": 1, "nama": "Dellvia", "nim_nip": "198501012010", "email": "dellvia@email.com", "password": _pw,
@@ -68,7 +67,7 @@ def cari(daftar, id_):
 
 
 def cek_ruangan(data, lama=None):
-    """Gabungkan data masuk dengan data lama (untuk PUT), validasi, kembalikan (hasil, pesan_error)."""
+    """Validasi data ruangan; saat PUT digabung dengan data lama."""
     h = {"jam_buka": "07:00", "jam_tutup": "21:00", "status": "tersedia", "fasilitas": [], "deskripsi": ""}
     h.update(lama or {})
     h.update({k: v for k, v in data.items() if k in ("kode", "nama", "jenis", "gedung", "lantai", "kapasitas",
@@ -82,7 +81,7 @@ def cek_ruangan(data, lama=None):
         return None, "Jenis harus salah satu dari: " + ", ".join(JENIS_RUANGAN)
     if h["status"] not in STATUS_RUANGAN:
         return None, "Status harus 'tersedia' atau 'dalam perbaikan'"
-    # bool lolos isinstance int, jadi ditolak manual
+    # True/False juga dianggap int, jadi dicek terpisah
     if not isinstance(h.get("kapasitas"), int) or isinstance(h["kapasitas"], bool) or h["kapasitas"] < 1:
         return None, "Kapasitas harus bilangan bulat lebih dari 0"
     if not isinstance(h["fasilitas"], list) or not all(isinstance(x, str) for x in h["fasilitas"]):
@@ -146,7 +145,7 @@ def hapus_ruangan(id_):
     r = cari(ruangan, id_)
     if not r:
         return error("Ruangan tidak ditemukan", 404)
-    # ponytail: belum cek peminjaman yang memakai ruangan ini, ditambah di Tahap 3
+    # ponytail: belum cek peminjaman terkait, ditambah di Tahap 3
     ruangan.remove(r)
     return jsonify(pesan="Ruangan dihapus")
 
@@ -161,7 +160,7 @@ EMAIL = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 
 
 def publik(p):
-    """Data pengguna tanpa password, aman dikirim ke frontend."""
+    """Data pengguna tanpa password."""
     return {k: v for k, v in p.items() if k != "password"}
 
 
@@ -201,7 +200,7 @@ def cek_pengguna(data, lama=None):
     return h, None
 
 
-# ponytail: belum ada token/sesi, endpoint pengguna terbuka untuk semua. Tambah cek peran admin kalau sempat.
+# ponytail: belum ada token/sesi, semua endpoint pengguna masih terbuka
 @app.get("/api/pengguna")
 def daftar_pengguna():
     return jsonify([publik(p) for p in pengguna])
@@ -246,7 +245,7 @@ def hapus_pengguna(id_):
     p = cari(pengguna, id_)
     if not p:
         return error("Pengguna tidak ditemukan", 404)
-    # ponytail: belum cek peminjaman milik pengguna ini, ditambah di Tahap 3
+    # ponytail: belum cek peminjaman terkait, ditambah di Tahap 3
     pengguna.remove(p)
     return jsonify(pesan="Pengguna dihapus")
 
