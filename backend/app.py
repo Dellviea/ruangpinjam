@@ -156,6 +156,101 @@ def index():
     return app.send_static_file("index.html")
 
 
+PERAN = ("mahasiswa", "admin")
+EMAIL = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+
+
+def publik(p):
+    """Data pengguna tanpa password, aman dikirim ke frontend."""
+    return {k: v for k, v in p.items() if k != "password"}
+
+
+def cek_pengguna(data, lama=None):
+    h = {"peran": "mahasiswa", "prodi": "", "no_hp": ""}
+    h.update(lama or {})
+    h.update({k: v for k, v in data.items() if k in ("nama", "nim_nip", "email", "peran", "prodi", "no_hp")})
+
+    for f in ("nama", "nim_nip", "email"):
+        if not isinstance(h.get(f), str) or not h[f].strip():
+            return None, f"Field '{f}' wajib diisi"
+        h[f] = h[f].strip()
+    for f in ("prodi", "no_hp"):
+        if not isinstance(h[f], str):
+            return None, f"'{f}' harus berupa teks"
+    h["email"] = h["email"].lower()
+    if not EMAIL.match(h["email"]):
+        return None, "Format email tidak valid"
+    if h["peran"] not in PERAN:
+        return None, "Peran harus 'mahasiswa' atau 'admin'"
+
+    pw = data.get("password")
+    if pw is not None:
+        if not isinstance(pw, str) or len(pw) < 6:
+            return None, "Password minimal 6 karakter"
+        h["password"] = generate_password_hash(pw)
+    elif lama is None:
+        return None, "Field 'password' wajib diisi"
+
+    for p in pengguna:
+        if p is lama:
+            continue
+        if p["email"] == h["email"]:
+            return None, f"Email '{h['email']}' sudah terdaftar"
+        if p["nim_nip"] == h["nim_nip"]:
+            return None, f"NIM/NIP '{h['nim_nip']}' sudah terdaftar"
+    return h, None
+
+
+# ponytail: belum ada token/sesi, endpoint pengguna terbuka untuk semua. Tambah cek peran admin kalau sempat.
+@app.get("/api/pengguna")
+def daftar_pengguna():
+    return jsonify([publik(p) for p in pengguna])
+
+
+@app.get("/api/pengguna/<int:id_>")
+def detail_pengguna(id_):
+    p = cari(pengguna, id_)
+    return jsonify(publik(p)) if p else error("Pengguna tidak ditemukan", 404)
+
+
+@app.post("/api/pengguna")
+def tambah_pengguna():
+    data = ambil_json()
+    if data is None:
+        return error("Body harus berupa JSON object")
+    h, pesan = cek_pengguna(data)
+    if pesan:
+        return error(pesan)
+    h["id"] = max((p["id"] for p in pengguna), default=0) + 1
+    pengguna.append(h)
+    return jsonify(publik(h)), 201
+
+
+@app.put("/api/pengguna/<int:id_>")
+def ubah_pengguna(id_):
+    p = cari(pengguna, id_)
+    if not p:
+        return error("Pengguna tidak ditemukan", 404)
+    data = ambil_json()
+    if data is None:
+        return error("Body harus berupa JSON object")
+    h, pesan = cek_pengguna(data, p)
+    if pesan:
+        return error(pesan)
+    p.update(h)
+    return jsonify(publik(p))
+
+
+@app.delete("/api/pengguna/<int:id_>")
+def hapus_pengguna(id_):
+    p = cari(pengguna, id_)
+    if not p:
+        return error("Pengguna tidak ditemukan", 404)
+    # ponytail: belum cek peminjaman milik pengguna ini, ditambah di Tahap 3
+    pengguna.remove(p)
+    return jsonify(pesan="Pengguna dihapus")
+
+
 @app.get("/api/health")
 def health():
     return jsonify(
