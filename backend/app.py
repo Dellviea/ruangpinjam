@@ -5,6 +5,7 @@ from datetime import datetime
 
 from dotenv import load_dotenv
 from flask import Flask, jsonify, request
+from werkzeug.security import generate_password_hash
 
 load_dotenv()
 
@@ -39,7 +40,18 @@ ruangan = [
      "jam_buka": "07:00", "jam_tutup": "18:00", "status": "dalam perbaikan",
      "deskripsi": "Sedang perbaikan lantai."},
 ]
-pengguna = []
+# Password contoh dari .env (PASSWORD_CONTOH); yang disimpan tetap hash-nya.
+_pw = generate_password_hash(os.getenv("PASSWORD_CONTOH", "pinjamruang123"))
+pengguna = [
+    {"id": 1, "nama": "Dellvia", "nim_nip": "198501012010", "email": "dellvia@email.com", "password": _pw,
+     "peran": "admin", "prodi": "Sarana dan Prasarana", "no_hp": "081200000001"},
+    {"id": 2, "nama": "Della", "nim_nip": "1202220001", "email": "della@email.com", "password": _pw,
+     "peran": "mahasiswa", "prodi": "S1 Teknologi Informasi", "no_hp": "081200000002"},
+    {"id": 3, "nama": "Raka", "nim_nip": "1202220002", "email": "raka@email.com", "password": _pw,
+     "peran": "mahasiswa", "prodi": "S1 Sistem Informasi", "no_hp": "081200000003"},
+    {"id": 4, "nama": "Nadia", "nim_nip": "1202220003", "email": "nadia@email.com", "password": _pw,
+     "peran": "mahasiswa", "prodi": "S1 Informatika", "no_hp": "081200000004"},
+]
 peminjaman = []
 
 JENIS_RUANGAN = ("Aula", "Ruang Kelas", "Lab Praktikum", "Lab Riset", "Ruang Rapat", "Lapangan")
