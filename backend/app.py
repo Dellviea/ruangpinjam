@@ -5,7 +5,7 @@ from datetime import datetime
 
 from dotenv import load_dotenv
 from flask import Flask, jsonify, request
-from werkzeug.security import generate_password_hash
+from werkzeug.security import check_password_hash, generate_password_hash
 
 load_dotenv()
 
@@ -249,6 +249,20 @@ def hapus_pengguna(id_):
     # ponytail: belum cek peminjaman milik pengguna ini, ditambah di Tahap 3
     pengguna.remove(p)
     return jsonify(pesan="Pengguna dihapus")
+
+
+@app.post("/api/login")
+def login():
+    data = ambil_json()
+    if data is None:
+        return error("Body harus berupa JSON object")
+    email, pw = data.get("email"), data.get("password")
+    if not isinstance(email, str) or not isinstance(pw, str) or not email or not pw:
+        return error("Email dan password wajib diisi")
+    p = next((p for p in pengguna if p["email"] == email.strip().lower()), None)
+    if not p or not check_password_hash(p["password"], pw):
+        return error("Email atau password salah", 401)
+    return jsonify(publik(p))
 
 
 @app.get("/api/health")
