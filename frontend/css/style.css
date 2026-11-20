@@ -15,7 +15,9 @@ h1 { margin: 0; font-size: 20px; font-weight: 600; }
 /* ---------- form dan tombol ---------- */
 .medan { margin-bottom: 16px; }
 .medan label { display: block; margin-bottom: 6px; font-weight: 500; color: var(--teks-2); }
-.medan input {
+.medan input,
+.medan select,
+.medan textarea {
   width: 100%;
   padding: 9px 12px;
   font: inherit;
@@ -24,6 +26,7 @@ h1 { margin: 0; font-size: 20px; font-weight: 600; }
   border: 1px solid var(--garis);
   border-radius: var(--radius-kecil);
 }
+.medan textarea { resize: vertical; }
 .hint { margin: 4px 0 0; font-size: 12px; color: var(--teks-3); }
 
 :focus-visible { outline: 2px solid var(--aksen); outline-offset: 2px; }
@@ -43,6 +46,10 @@ h1 { margin: 0; font-size: 20px; font-weight: 600; }
   cursor: pointer;
 }
 .tombol:hover { background: var(--aksen-gelap); }
+.tombol-auto { width: auto; }
+.tombol-kecil { width: auto; gap: 6px; padding: 7px 12px; }
+.tombol-sekunder { color: var(--teks-2); background: var(--panel); border: 1px solid var(--garis); }
+.tombol-sekunder:hover { background: var(--latar); }
 .tombol:disabled { opacity: .6; cursor: not-allowed; }
 
 .pesan-error {
@@ -137,6 +144,114 @@ h1 { margin: 0; font-size: 20px; font-weight: 600; }
 .isi-kepala { margin-bottom: 20px; }
 .kartu { padding: 24px; background: var(--panel); border: 1px solid var(--garis); border-radius: var(--radius); }
 .kosong { padding: 48px 16px; text-align: center; color: var(--teks-3); }
+
+/* ---------- halaman jadwal ---------- */
+.kontrol {
+  padding: 7px 10px;
+  font: inherit;
+  color: var(--teks);
+  background: var(--panel);
+  border: 1px solid var(--garis);
+  border-radius: var(--radius-kecil);
+}
+.tombol-ikon {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  color: var(--teks-2);
+  background: var(--panel);
+  border: 1px solid var(--garis);
+  border-radius: var(--radius-kecil);
+  cursor: pointer;
+}
+.tombol-ikon:hover { background: var(--latar); }
+
+.j-alat { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-bottom: 12px; }
+.j-alat .grup { display: flex; align-items: center; gap: 6px; }
+.j-kanan { margin-left: auto; gap: 8px; }
+.hari-label { font-weight: 500; }
+
+.j-legenda { display: flex; flex-wrap: wrap; gap: 6px 16px; margin-bottom: 12px; font-size: 12px; color: var(--teks-3); }
+.j-legenda span { display: inline-flex; align-items: center; gap: 6px; }
+.sw { display: inline-block; width: 12px; height: 12px; border: 1px solid; border-radius: 3px; }
+.sw-milik { background: var(--aksen-lembut); border-color: var(--aksen); }
+.sw-lain { background: var(--lain-bg); border-color: var(--lain-garis); }
+.sw-tutup { background: var(--latar); border-color: var(--garis); }
+
+.j-gulir { overflow-x: auto; background: var(--panel); border: 1px solid var(--garis); border-radius: var(--radius); }
+.j-tabel { --kolom-ruang: 200px; width: calc(var(--kolom-ruang) + var(--jam) * var(--lebar-jam)); }
+.j-kepala, .j-baris { display: grid; grid-template-columns: var(--kolom-ruang) calc(var(--jam) * var(--lebar-jam)); }
+.j-kepala { border-bottom: 1px solid var(--garis); }
+.j-jam-label { display: grid; grid-template-columns: repeat(var(--jam), 1fr); }
+.j-jam-label span { padding: 8px 6px; font-size: 11px; color: var(--teks-3); border-left: 1px solid var(--garis-halus); }
+
+.j-ruang-label, .j-ruang {
+  position: sticky;
+  left: 0;
+  z-index: 3;
+  padding: 8px 12px;
+  background: var(--panel);
+  border-right: 1px solid var(--garis);
+}
+.j-ruang-label { padding-block: 8px; font-size: 12px; color: var(--teks-3); }
+.j-ruang { border-bottom: 1px solid var(--garis-halus); }
+.j-nama { font-weight: 500; }
+.j-sub { font-size: 12px; color: var(--teks-3); }
+
+.j-kelompok { background: var(--latar); border-bottom: 1px solid var(--garis); }
+.j-kelompok span { position: sticky; left: 0; display: inline-block; padding: 6px 12px; font-size: 12px; font-weight: 600; color: var(--teks-2); }
+
+.j-baris { min-height: 80px; }
+.j-track { position: relative; display: grid; grid-template-columns: repeat(var(--jam), 1fr); border-bottom: 1px solid var(--garis-halus); }
+.j-slot { border-left: 1px solid var(--garis-halus); cursor: pointer; }
+.j-slot:hover { background: var(--aksen-lembut); }
+.j-slot.j-tutup, .j-rusak .j-ruang { background: var(--latar); }
+.j-slot.j-tutup { cursor: not-allowed; }
+.j-rusak .j-nama { color: var(--teks-3); }
+
+.j-blok {
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  z-index: 1;
+  padding: 5px 7px;
+  overflow: hidden;
+  font-size: 11.5px;
+  line-height: 15px;
+  border: 1px solid;
+  border-radius: var(--radius-kecil);
+}
+.j-blok.milik { color: var(--aksen-gelap); background: var(--aksen-lembut); border-color: var(--aksen); }
+.j-blok.lain { color: var(--lain-teks); background: var(--lain-bg); border-color: var(--lain-garis); }
+.j-jam { font-weight: 600; }
+.j-perlu, .j-oleh { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.j-chip { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 2px; }
+.chip { padding: 0 6px; font-size: 10.5px; font-weight: 500; line-height: 16px; border-radius: 4px; }
+.chip-milik { color: #fff; background: var(--aksen); }
+.chip-menunggu { color: var(--tunggu-teks); background: var(--tunggu-bg); }
+.chip-disetujui { color: var(--ok-teks); background: var(--ok-bg); }
+
+/* ---------- pop-up pengajuan ---------- */
+.dialog {
+  width: min(480px, calc(100vw - 32px));
+  max-height: calc(100vh - 32px);
+  padding: 0;
+  overflow: auto;
+  color: var(--teks);
+  background: var(--panel);
+  border: 1px solid var(--garis);
+  border-radius: var(--radius);
+}
+.dialog::backdrop { background: rgba(20, 20, 23, .4); }
+.dialog form { padding: 24px; }
+.dialog h2 { margin: 0 0 16px; font-size: 18px; font-weight: 600; }
+.baris-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.cek { margin: 0 0 16px; padding: 10px 12px; font-size: 13px; border-radius: var(--radius-kecil); }
+.cek-netral { color: var(--teks-2); background: var(--latar); }
+.cek-aman { color: var(--ok-teks); background: var(--ok-bg); }
+.cek-bentrok { color: var(--bahaya-teks); background: var(--bahaya-bg); }
+.aksi { display: flex; justify-content: flex-end; gap: 8px; }
 
 @media (max-width: 760px) {
   .layout { flex-direction: column; }

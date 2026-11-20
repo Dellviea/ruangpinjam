@@ -20,6 +20,9 @@ const IKON = {
   persetujuan: '<circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/>',
   kelola: '<ellipse cx="12" cy="6" rx="8" ry="3"/><path d="M4 6v6c0 1.7 3.6 3 8 3s8-1.3 8-3V6M4 12v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6"/>',
   keluar: '<path d="M10 4H6a1 1 0 0 0-1 1v14a1 1 0 0 0 1 1h4M15 8l4 4-4 4M19 12H9"/>',
+  kiri: '<path d="m15 6-6 6 6 6"/>',
+  kanan: '<path d="m9 6 6 6-6 6"/>',
+  tambah: '<path d="M12 5v14M5 12h14"/>',
 };
 
 export function ikon(nama) {

@@ -1,9 +1,10 @@
 import { api, ambilSesi, hapusSesi } from "./api.js";
 import { halamanLogin, halamanLupaPassword, halamanRegister } from "./auth.js";
 import { h, ikon } from "./dom.js";
+import { halamanJadwal } from "./jadwal.js";
 import { t } from "./i18n.js";
 
-// Isi halaman Jadwal dst. dibuat di tahap berikutnya.
+// Halaman selain Jadwal dibuat di tahap berikutnya.
 const segera = () => h("div", { class: "kartu kosong" }, t("placeholder.segera"));
 
 // publik = boleh dibuka tanpa login, admin = hanya peran admin
@@ -11,7 +12,7 @@ const RUTE = {
   login: { publik: true, tampil: halamanLogin },
   register: { publik: true, tampil: halamanRegister },
   "lupa-password": { publik: true, tampil: halamanLupaPassword },
-  jadwal: { judul: "nav.jadwal", ikon: "jadwal", tampil: segera },
+  jadwal: { judul: "nav.jadwal", ikon: "jadwal", tampil: halamanJadwal },
   ruangan: { judul: "nav.ruangan", ikon: "ruangan", tampil: segera },
   peminjaman: { judul: "nav.peminjaman", ikon: "peminjaman", tampil: segera },
   persetujuan: { judul: "nav.persetujuan", ikon: "persetujuan", admin: true, tampil: segera },
