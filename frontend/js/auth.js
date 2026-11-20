@@ -21,7 +21,12 @@ function kartu(judul, sub, form, bawah) {
       h("p", { class: "auth-bawah" }, ...bawah)));
 }
 
-// Kirim form ke API; sukses -> simpan sesi lalu ke Jadwal, gagal -> tampilkan pesan dari server.
+const masuk = (pengguna) => {
+  simpanSesi(pengguna);
+  location.hash = "#/jadwal";
+};
+
+// Kirim form ke API; gagal -> tampilkan pesan dari server. ambilKirim mengembalikan { path, body, sukses }.
 function kirim(form, pesan, tombol, kunciProses, kunciTombol, ambilKirim) {
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -36,8 +41,7 @@ function kirim(form, pesan, tombol, kunciProses, kunciTombol, ambilKirim) {
     tombol.disabled = true;
     tombol.textContent = t(kunciProses);
     try {
-      simpanSesi(await api(permintaan.path, { method: "POST", body: permintaan.body }));
-      location.hash = "#/jadwal";
+      permintaan.sukses(await api(permintaan.path, { method: "POST", body: permintaan.body }));
     } catch (err) {
       pesan.textContent = err.message;
       tombol.disabled = false;
@@ -52,11 +56,13 @@ export function halamanLogin() {
   const form = h("form", { novalidate: true },
     medan("email", "login.email", { type: "email", autocomplete: "email", required: true }),
     medan("password", "login.password", { type: "password", autocomplete: "current-password", required: true }),
+    h("p", { class: "lupa-baris" }, h("a", { href: "#/lupa-password" }, t("login.lupa"))),
     pesan, tombol);
 
   kirim(form, pesan, tombol, "login.proses", "login.tombol", (d) => ({
     path: "/login",
     body: { email: d.get("email"), password: d.get("password") },
+    sukses: masuk,
   }));
 
   return kartu("login.judul", "login.sub", form,
@@ -81,9 +87,42 @@ export function halamanRegister() {
     if (d.get("password") !== d.get("konfirmasi")) throw new Error(t("register.passwordBeda"));
     const body = Object.fromEntries(d);
     delete body.konfirmasi;
-    return { path: "/register", body };
+    return { path: "/register", body, sukses: masuk };
   });
 
   return kartu("register.judul", "register.sub", form,
     [t("register.sudahPunya") + " ", h("a", { href: "#/login" }, t("register.masuk"))]);
+}
+
+export function halamanLupaPassword() {
+  const pesan = h("p", { class: "pesan-error", role: "alert" });
+  const berhasil = h("p", { class: "pesan-ok", role: "status" });
+  const tombol = h("button", { class: "tombol", type: "submit" }, t("lupa-password.tombol"));
+  const form = h("form", { novalidate: true },
+    medan("email", "lupa-password.email", { type: "email", autocomplete: "email", required: true }),
+    medan("nim", "lupa-password.nim", { required: true }),
+    medan("password_baru", "lupa-password.passwordBaru", { type: "password", autocomplete: "new-password", required: true },
+      t("register.hintPassword")),
+    medan("konfirmasi", "lupa-password.konfirmasi", { type: "password", autocomplete: "new-password", required: true }),
+    pesan, berhasil, tombol);
+
+  form.addEventListener("submit", () => (berhasil.textContent = ""));
+  kirim(form, pesan, tombol, "lupa-password.proses", "lupa-password.tombol", (d) => {
+    if (d.get("password_baru") !== d.get("konfirmasi")) throw new Error(t("register.passwordBeda"));
+    const body = Object.fromEntries(d);
+    delete body.konfirmasi;
+    return {
+      path: "/lupa-password",
+      body,
+      sukses: () => {
+        form.reset();
+        berhasil.textContent = t("lupa-password.berhasil");
+        tombol.disabled = false;
+        tombol.textContent = t("lupa-password.tombol");
+      },
+    };
+  });
+
+  return kartu("lupa-password.judul", "lupa-password.sub", form,
+    [h("a", { href: "#/login" }, t("lupa-password.kembali"))]);
 }

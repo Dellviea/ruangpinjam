@@ -1,5 +1,5 @@
 import { api, ambilSesi, hapusSesi } from "./api.js";
-import { halamanLogin, halamanRegister } from "./auth.js";
+import { halamanLogin, halamanLupaPassword, halamanRegister } from "./auth.js";
 import { h, ikon } from "./dom.js";
 import { t } from "./i18n.js";
 
@@ -10,6 +10,7 @@ const segera = () => h("div", { class: "kartu kosong" }, t("placeholder.segera")
 const RUTE = {
   login: { publik: true, tampil: halamanLogin },
   register: { publik: true, tampil: halamanRegister },
+  "lupa-password": { publik: true, tampil: halamanLupaPassword },
   jadwal: { judul: "nav.jadwal", ikon: "jadwal", tampil: segera },
   ruangan: { judul: "nav.ruangan", ikon: "ruangan", tampil: segera },
   peminjaman: { judul: "nav.peminjaman", ikon: "peminjaman", tampil: segera },

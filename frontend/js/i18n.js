@@ -24,6 +24,7 @@ const teks = {
     "login.password": "Password",
     "login.tombol": "Masuk",
     "login.proses": "Memproses...",
+    "login.lupa": "Lupa password?",
     "login.belumPunya": "Belum punya akun?",
     "login.daftar": "Daftar",
 
@@ -42,6 +43,17 @@ const teks = {
     "register.proses": "Memproses...",
     "register.sudahPunya": "Sudah punya akun?",
     "register.masuk": "Masuk",
+
+    "lupa-password.judul": "Lupa password",
+    "lupa-password.sub": "Verifikasi dengan email dan NIM/NIP, lalu isi password baru.",
+    "lupa-password.email": "Email",
+    "lupa-password.nim": "NIM / NIP",
+    "lupa-password.passwordBaru": "Password baru",
+    "lupa-password.konfirmasi": "Ulangi password baru",
+    "lupa-password.tombol": "Ganti password",
+    "lupa-password.proses": "Memproses...",
+    "lupa-password.berhasil": "Password berhasil diganti. Silakan masuk dengan password baru.",
+    "lupa-password.kembali": "Kembali ke halaman masuk",
 
     "placeholder.segera": "Halaman ini akan segera tersedia.",
 
