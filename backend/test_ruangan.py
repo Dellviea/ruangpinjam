@@ -4,7 +4,7 @@ from app import app
 c = app.test_client()
 baru = {"kode": "T-01", "nama": "Ruang Tes", "jenis": "Aula", "gedung": "G", "lantai": "1", "kapasitas": 10}
 
-assert len(c.get("/api/ruangan").get_json()) == 6
+assert len(c.get("/api/ruangan").get_json()) == 17
 assert c.get("/api/ruangan/999").status_code == 404
 
 r = c.post("/api/ruangan", json=baru)

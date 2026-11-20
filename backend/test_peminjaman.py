@@ -2,7 +2,7 @@
 from app import app
 
 c = app.test_client()
-# tanggal jauh di depan supaya tidak ketemu data contoh; Ruang Kelas 1 (id 2) buka 07:00-21:00, kapasitas 40
+# tanggal jauh di depan supaya tidak ketemu data contoh; Ruang Kelas 1 (id 2) buka 07:00-21:00, kapasitas 45
 b = {"id_pengguna": 2, "id_ruangan": 2, "tanggal": "2030-01-10", "jam_mulai": "14:00", "jam_selesai": "16:00",
      "jenis_kegiatan": "Studi grup", "keperluan": "Belajar bareng", "jumlah_peserta": 10}
 
@@ -13,7 +13,7 @@ def kirim(**ubah):
 
 # data contoh dan GET
 daftar = c.get("/api/peminjaman").get_json()
-assert len(daftar) == 7 and {p["status"] for p in daftar} == {"menunggu", "disetujui", "ditolak", "dibatalkan"}
+assert len(daftar) == 20 and {p["status"] for p in daftar} == {"menunggu", "disetujui", "ditolak", "dibatalkan"}
 assert daftar[0]["nama_pengguna"] == "Raka" and daftar[0]["nama_ruangan"] == "Aula Pendopo"
 assert c.get("/api/peminjaman/999").status_code == 404
 
@@ -38,7 +38,7 @@ b3 = r.get_json()["id"]
 assert kirim(id_ruangan=5, jumlah_peserta=5).status_code == 201  # Ruang Rapat, id 4 peminjaman baru
 
 # aturan lain
-r = kirim(jumlah_peserta=41, jam_mulai="19:00", jam_selesai="20:00")
+r = kirim(jumlah_peserta=46, jam_mulai="19:00", jam_selesai="20:00")
 assert r.status_code == 400 and "kapasitas" in r.get_json()["error"]
 assert kirim(id_ruangan=6, jumlah_peserta=5).status_code == 400  # lapangan dalam perbaikan
 assert kirim(id_ruangan=3, jam_mulai="17:00", jam_selesai="19:00").status_code == 400  # lab tutup 18:00
@@ -82,5 +82,5 @@ assert c.delete("/api/pengguna/2").status_code == 409
 
 assert c.delete(f"/api/peminjaman/{a}").status_code == 200
 assert c.get(f"/api/peminjaman/{a}").status_code == 404
-assert c.get("/api/health").get_json()["jumlah_data"]["peminjaman"] > 7
+assert c.get("/api/health").get_json()["jumlah_data"]["peminjaman"] > 20
 print("semua cek lolos")
