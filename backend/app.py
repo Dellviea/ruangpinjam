@@ -319,6 +319,100 @@ def lupa_password():
     return jsonify(pesan="Password berhasil diganti")
 
 
+JENIS_KEGIATAN = ("Praktikum", "Responsi", "Studi grup", "Kelas pengganti", "Riset", "Rapat", "Seminar",
+                  "Acara UKM", "Olahraga", "Pelatihan", "Lainnya")
+AKTIF = ("menunggu", "disetujui")  # hanya status ini yang dihitung saat cek bentrok
+
+
+def menit(j):
+    h, m = j.split(":")
+    return int(h) * 60 + int(m)
+
+
+def jam(m):
+    return f"{m // 60:02d}:{m % 60:02d}"
+
+
+def jam_kosong_terdekat(ruang, tanggal, mulai, selesai, abaikan=None):
+    """Cari rentang kosong sepanjang durasi yang sama, yang awalnya paling dekat dengan jam mulai."""
+    durasi = selesai - mulai
+    terpakai = sorted((menit(p["jam_mulai"]), menit(p["jam_selesai"])) for p in peminjaman
+                      if p["id_ruangan"] == ruang["id"] and p["tanggal"] == tanggal
+                      and p["status"] in AKTIF and p is not abaikan)
+    tutup = menit(ruang["jam_tutup"])
+    celah, awal = [], menit(ruang["jam_buka"])
+    for a, b in terpakai:
+        if a > awal:
+            celah.append((awal, a))
+        awal = max(awal, b)
+    if awal < tutup:
+        celah.append((awal, tutup))
+
+    terbaik = None
+    for a, b in celah:
+        if b - a >= durasi:
+            s = min(max(mulai, a), b - durasi)  # geser sedekat mungkin ke jam yang diminta
+            if terbaik is None or abs(s - mulai) < abs(terbaik - mulai):
+                terbaik = s
+    return None if terbaik is None else (terbaik, terbaik + durasi)
+
+
+def cek_peminjaman(data, lama=None):
+    h = dict(lama or {})
+    h.update({k: v for k, v in data.items() if k in ("id_pengguna", "id_ruangan", "tanggal", "jam_mulai",
+              "jam_selesai", "jenis_kegiatan", "keperluan", "jumlah_peserta")})
+
+    for f in ("id_pengguna", "id_ruangan", "tanggal", "jam_mulai", "jam_selesai",
+              "jenis_kegiatan", "keperluan", "jumlah_peserta"):
+        if h.get(f) in (None, ""):
+            return None, f"Field '{f}' wajib diisi", 400
+    for f in ("id_pengguna", "id_ruangan", "jumlah_peserta"):
+        if not isinstance(h[f], int) or isinstance(h[f], bool):
+            return None, f"'{f}' harus berupa bilangan bulat", 400
+    if h["jumlah_peserta"] < 1:
+        return None, "Jumlah peserta minimal 1", 400
+    if not cari(pengguna, h["id_pengguna"]):
+        return None, "Pengguna tidak ditemukan", 400
+    ruang = cari(ruangan, h["id_ruangan"])
+    if not ruang:
+        return None, "Ruangan tidak ditemukan", 400
+
+    try:
+        datetime.strptime(h["tanggal"], "%Y-%m-%d")
+    except (TypeError, ValueError):
+        return None, "Tanggal harus berformat YYYY-MM-DD dan benar-benar ada", 400
+    for f in ("jam_mulai", "jam_selesai"):
+        if not isinstance(h[f], str) or not JAM.match(h[f]):
+            return None, f"'{f}' harus berformat HH:MM, contoh 09:00", 400
+    if h["jenis_kegiatan"] not in JENIS_KEGIATAN:
+        return None, "Jenis kegiatan harus salah satu dari: " + ", ".join(JENIS_KEGIATAN), 400
+    if not isinstance(h["keperluan"], str) or not h["keperluan"].strip():
+        return None, "Keperluan wajib diisi", 400
+    h["keperluan"] = h["keperluan"].strip()
+
+    if ruang["status"] != "tersedia":
+        return None, f"{ruang['nama']} sedang dalam perbaikan dan tidak bisa dipinjam", 400
+    mulai, selesai = menit(h["jam_mulai"]), menit(h["jam_selesai"])
+    if selesai <= mulai:
+        return None, "Jam selesai harus lebih besar dari jam mulai", 400
+    if mulai < menit(ruang["jam_buka"]) or selesai > menit(ruang["jam_tutup"]):
+        return None, f"{ruang['nama']} hanya buka {ruang['jam_buka']}-{ruang['jam_tutup']}", 400
+    if h["jumlah_peserta"] > ruang["kapasitas"]:
+        return None, (f"Jumlah peserta ({h['jumlah_peserta']}) melebihi kapasitas "
+                      f"{ruang['nama']} ({ruang['kapasitas']} orang)"), 400
+
+    bentrok = [p for p in peminjaman
+               if p is not lama and p["id_ruangan"] == h["id_ruangan"] and p["tanggal"] == h["tanggal"]
+               and p["status"] in AKTIF and mulai < menit(p["jam_selesai"]) and selesai > menit(p["jam_mulai"])]
+    if bentrok:
+        daftar = "; ".join(f"'{p['keperluan']}' ({p['jam_mulai']}-{p['jam_selesai']})" for p in bentrok)
+        saran = jam_kosong_terdekat(ruang, h["tanggal"], mulai, selesai, lama)
+        info = (f"Jam kosong terdekat: {jam(saran[0])}-{jam(saran[1])}." if saran
+                else "Tidak ada jam kosong yang cukup di tanggal itu.")
+        return None, f"Jadwal bentrok dengan {daftar}. {info}", 409
+    return h, None, None
+
+
 @app.get("/api/health")
 def health():
     return jsonify(
