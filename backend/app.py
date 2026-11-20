@@ -505,6 +505,19 @@ def tambah_peminjaman():
     return jsonify(tampil_peminjaman(h)), 201
 
 
+# Cek jadwal untuk pop-up pengajuan: tidak menyimpan apa pun, selalu 200 dengan {aman, pesan}.
+@app.post("/api/peminjaman/cek")
+def cek_jadwal():
+    data = ambil_json()
+    if data is None:
+        return error("Body harus berupa JSON object")
+    # isian yang tidak mempengaruhi jadwal diberi nilai bawaan, supaya bisa dicek sebelum form lengkap
+    data = {"jenis_kegiatan": "Lainnya", "keperluan": "-", "jumlah_peserta": 1,
+            **{k: v for k, v in data.items() if v not in (None, "")}}
+    _, pesan, _ = cek_peminjaman(data)
+    return jsonify(aman=pesan is None, pesan=pesan or "Jadwal tersedia")
+
+
 # Belum dicek siapa pemiliknya, karena belum ada token/sesi.
 @app.put("/api/peminjaman/<int:id_>")
 def ubah_peminjaman(id_):

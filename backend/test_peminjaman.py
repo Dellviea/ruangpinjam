@@ -76,6 +76,22 @@ assert c.put(f"/api/peminjaman/{b3}", json={"status": "dibatalkan"}).status_code
 r = kirim(jam_mulai="12:00", jam_selesai="14:00")
 assert r.status_code == 201
 
+# cek jadwal untuk pop-up: tidak menyimpan, selalu 200 dengan {aman, pesan}
+jumlah = len(c.get("/api/peminjaman").get_json())
+cek = {"id_pengguna": 2, "id_ruangan": 2, "tanggal": "2030-03-01", "jam_mulai": "09:00", "jam_selesai": "11:00"}
+r = c.post("/api/peminjaman/cek", json=cek)
+assert r.status_code == 200 and r.get_json()["aman"] is True
+assert c.post("/api/peminjaman/cek", json={**cek, "keperluan": "", "jumlah_peserta": None}).get_json()["aman"] is True  # isian kosong diabaikan
+assert len(c.get("/api/peminjaman").get_json()) == jumlah  # tidak ada yang tersimpan
+
+assert kirim(tanggal="2030-03-01", jam_mulai="09:00", jam_selesai="11:00").status_code == 201
+r = c.post("/api/peminjaman/cek", json={**cek, "jam_mulai": "10:00", "jam_selesai": "12:00"})
+assert r.status_code == 200 and r.get_json()["aman"] is False and "bentrok" in r.get_json()["pesan"]
+assert c.post("/api/peminjaman/cek", json={**cek, "jam_mulai": "11:00", "jam_selesai": "12:00"}).get_json()["aman"] is True
+assert c.post("/api/peminjaman/cek", json={**cek, "jam_mulai": "13:00", "jam_selesai": "14:00", "jumlah_peserta": 100}).get_json()["aman"] is False  # kapasitas
+assert c.post("/api/peminjaman/cek", json={**cek, "id_ruangan": 6}).get_json()["aman"] is False  # perbaikan
+assert c.post("/api/peminjaman/cek", json={"id_ruangan": 2}).get_json()["aman"] is False  # data belum lengkap
+assert c.post("/api/peminjaman/cek", data="bukan json").status_code == 400
 # ruangan dan pengguna yang masih dipakai tidak bisa dihapus
 assert c.delete("/api/ruangan/2").status_code == 409
 assert c.delete("/api/pengguna/2").status_code == 409
