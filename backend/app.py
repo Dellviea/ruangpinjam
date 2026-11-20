@@ -1,7 +1,7 @@
 ﻿import os
 import re
 import socket
-from datetime import datetime
+from datetime import date, datetime, timedelta
 
 from dotenv import load_dotenv
 from flask import Flask, jsonify, request
@@ -51,7 +51,30 @@ pengguna = [
     {"id": 4, "nama": "Nadia", "nim_nip": "1202220003", "email": "nadia@email.com", "password": _pw,
      "peran": "mahasiswa", "prodi": "S1 Informatika", "no_hp": "081200000004"},
 ]
-peminjaman = []
+
+
+def hari(n):
+    """Tanggal hari ini + n hari, supaya data contoh selalu terlihat di jadwal."""
+    return (date.today() + timedelta(days=n)).isoformat()
+
+
+def _contoh(id_, pengguna_, ruang, tgl, mulai, selesai, jenis, perlu, jml, status, alasan=""):
+    return {"id": id_, "id_pengguna": pengguna_, "id_ruangan": ruang, "tanggal": hari(tgl),
+            "jam_mulai": mulai, "jam_selesai": selesai, "jenis_kegiatan": jenis, "keperluan": perlu,
+            "jumlah_peserta": jml, "status": status, "alasan_penolakan": alasan,
+            "dibuat_pada": datetime.now().isoformat(timespec="seconds")}
+
+
+peminjaman = [
+    _contoh(1, 3, 1, 0, "13:00", "16:00", "Acara UKM", "UKM Cabaret: gladi pentas", 60, "disetujui"),
+    _contoh(2, 4, 2, 0, "09:00", "11:00", "Responsi", "Responsi Kalkulus", 35, "disetujui"),
+    _contoh(3, 2, 2, 0, "13:00", "15:00", "Studi grup", "Studi grup Struktur Data, persiapan UAS", 8, "menunggu"),
+    _contoh(4, 3, 3, 1, "09:00", "12:00", "Praktikum", "Praktikum Algoritma Pemrograman", 28, "disetujui"),
+    _contoh(5, 2, 4, 1, "10:00", "12:00", "Riset", "Bimbingan riset tugas akhir", 5, "ditolak",
+            "Lab dipakai untuk pemeliharaan server"),
+    _contoh(6, 4, 5, 1, "15:00", "17:00", "Rapat", "Rapat himpunan", 15, "menunggu"),
+    _contoh(7, 2, 2, 1, "10:00", "12:00", "Kelas pengganti", "Kelas pengganti Fisika Dasar", 30, "dibatalkan"),
+]
 
 JENIS_RUANGAN = ("Aula", "Ruang Kelas", "Lab Praktikum", "Lab Riset", "Ruang Rapat", "Lapangan")
 STATUS_RUANGAN = ("tersedia", "dalam perbaikan")
