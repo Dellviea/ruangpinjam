@@ -413,6 +413,67 @@ def cek_peminjaman(data, lama=None):
     return h, None, None
 
 
+def tampil_peminjaman(p):
+    """Peminjaman + nama peminjam dan ruangan, supaya frontend tidak perlu menggabungkan sendiri."""
+    pg, rg = cari(pengguna, p["id_pengguna"]), cari(ruangan, p["id_ruangan"])
+    return {**p, "nama_pengguna": pg["nama"] if pg else "-", "nama_ruangan": rg["nama"] if rg else "-"}
+
+
+@app.get("/api/peminjaman")
+def daftar_peminjaman():
+    return jsonify([tampil_peminjaman(p) for p in peminjaman])
+
+
+@app.get("/api/peminjaman/<int:id_>")
+def detail_peminjaman(id_):
+    p = cari(peminjaman, id_)
+    return jsonify(tampil_peminjaman(p)) if p else error("Peminjaman tidak ditemukan", 404)
+
+
+@app.post("/api/peminjaman")
+def tambah_peminjaman():
+    data = ambil_json()
+    if data is None:
+        return error("Body harus berupa JSON object")
+    h, pesan, kode = cek_peminjaman(data)
+    if pesan:
+        return error(pesan, kode)
+    h.update(id=max((p["id"] for p in peminjaman), default=0) + 1, status="menunggu", alasan_penolakan="",
+             dibuat_pada=datetime.now().isoformat(timespec="seconds"))
+    peminjaman.append(h)
+    return jsonify(tampil_peminjaman(h)), 201
+
+
+# ponytail: belum cek siapa pemiliknya, sama seperti pengguna (belum ada token/sesi)
+@app.put("/api/peminjaman/<int:id_>")
+def ubah_peminjaman(id_):
+    p = cari(peminjaman, id_)
+    if not p:
+        return error("Peminjaman tidak ditemukan", 404)
+    data = ambil_json()
+    if data is None:
+        return error("Body harus berupa JSON object")
+    if p["status"] != "menunggu":
+        return error("Hanya peminjaman berstatus menunggu yang bisa diubah atau dibatalkan", 409)
+    if data.get("status") == "dibatalkan":  # tombol "Batalkan"
+        p["status"] = "dibatalkan"
+        return jsonify(tampil_peminjaman(p))
+    h, pesan, kode = cek_peminjaman(data, p)
+    if pesan:
+        return error(pesan, kode)
+    p.update(h)
+    return jsonify(tampil_peminjaman(p))
+
+
+@app.delete("/api/peminjaman/<int:id_>")
+def hapus_peminjaman(id_):
+    p = cari(peminjaman, id_)
+    if not p:
+        return error("Peminjaman tidak ditemukan", 404)
+    peminjaman.remove(p)
+    return jsonify(pesan="Peminjaman dihapus")
+
+
 @app.get("/api/health")
 def health():
     return jsonify(
