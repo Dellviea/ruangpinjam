@@ -474,6 +474,34 @@ def hapus_peminjaman(id_):
     return jsonify(pesan="Peminjaman dihapus")
 
 
+@app.put("/api/peminjaman/<int:id_>/setujui")
+def setujui_peminjaman(id_):
+    p = cari(peminjaman, id_)
+    if not p:
+        return error("Peminjaman tidak ditemukan", 404)
+    if p["status"] != "menunggu":
+        return error(f"Hanya peminjaman berstatus menunggu yang bisa disetujui (sekarang: {p['status']})", 409)
+    p["status"], p["alasan_penolakan"] = "disetujui", ""
+    return jsonify(tampil_peminjaman(p))
+
+
+@app.put("/api/peminjaman/<int:id_>/tolak")
+def tolak_peminjaman(id_):
+    p = cari(peminjaman, id_)
+    if not p:
+        return error("Peminjaman tidak ditemukan", 404)
+    data = ambil_json()
+    if data is None:
+        return error("Body harus berupa JSON object")
+    alasan = data.get("alasan")
+    if not isinstance(alasan, str) or not alasan.strip():
+        return error("Alasan penolakan wajib diisi")
+    if p["status"] != "menunggu":
+        return error(f"Hanya peminjaman berstatus menunggu yang bisa ditolak (sekarang: {p['status']})", 409)
+    p["status"], p["alasan_penolakan"] = "ditolak", alasan.strip()
+    return jsonify(tampil_peminjaman(p))
+
+
 @app.get("/api/health")
 def health():
     return jsonify(
