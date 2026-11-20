@@ -1,0 +1,31 @@
+/* Semua warna aplikasi ada di sini. Ganti nilainya untuk mengubah tema. */
+:root {
+  --latar: #F2F2F4;
+  --panel: #FFFFFF;
+  --garis: #DEDEE3;
+  --garis-halus: #E9E9ED;
+
+  --teks: #141417;
+  --teks-2: #3F3F46;
+  --teks-3: #666670;
+
+  --aksen: #B04A72;
+  --aksen-gelap: #963E60;
+  --aksen-lembut: #F7E4EC;
+
+  /* jadwal orang lain */
+  --lain-bg: #E4EDF6;
+  --lain-garis: #C4D6E8;
+  --lain-teks: #1F4466;
+
+  /* status: hijau = aman/disetujui, kuning = menunggu, merah = ditolak/bentrok */
+  --ok-bg: #E3F2E8;
+  --ok-teks: #1E6B3A;
+  --tunggu-bg: #FBF1D6;
+  --tunggu-teks: #7A5A00;
+  --bahaya-bg: #FBE4E4;
+  --bahaya-teks: #9B2C2C;
+
+  --radius: 8px;
+  --radius-kecil: 6px;
+}

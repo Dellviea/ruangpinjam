@@ -1,0 +1,134 @@
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: "Inter", system-ui, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  background: var(--latar);
+  color: var(--teks);
+}
+
+a { color: var(--aksen); }
+h1 { margin: 0; font-size: 20px; font-weight: 600; }
+
+/* ---------- form dan tombol ---------- */
+.medan { margin-bottom: 16px; }
+.medan label { display: block; margin-bottom: 6px; font-weight: 500; color: var(--teks-2); }
+.medan input {
+  width: 100%;
+  padding: 9px 12px;
+  font: inherit;
+  color: var(--teks);
+  background: var(--panel);
+  border: 1px solid var(--garis);
+  border-radius: var(--radius-kecil);
+}
+.hint { margin: 4px 0 0; font-size: 12px; color: var(--teks-3); }
+
+:focus-visible { outline: 2px solid var(--aksen); outline-offset: 2px; }
+
+.tombol {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 10px 16px;
+  font: inherit;
+  font-weight: 500;
+  color: #fff;
+  background: var(--aksen);
+  border: 0;
+  border-radius: var(--radius-kecil);
+  cursor: pointer;
+}
+.tombol:hover { background: var(--aksen-gelap); }
+.tombol:disabled { opacity: .6; cursor: not-allowed; }
+
+.pesan-error {
+  margin: 0 0 16px;
+  padding: 10px 12px;
+  color: var(--bahaya-teks);
+  background: var(--bahaya-bg);
+  border-radius: var(--radius-kecil);
+}
+.pesan-error:empty { display: none; }
+
+/* ---------- halaman login dan register ---------- */
+.auth { min-height: 100vh; display: grid; place-items: center; padding: 24px; }
+.auth-kartu {
+  width: 100%;
+  max-width: 400px;
+  padding: 32px;
+  background: var(--panel);
+  border: 1px solid var(--garis);
+  border-radius: var(--radius);
+}
+.auth-merek { display: flex; align-items: center; gap: 8px; margin-bottom: 20px; font-weight: 600; color: var(--aksen); }
+.auth-sub { margin: 4px 0 24px; color: var(--teks-3); }
+.auth-bawah { margin: 20px 0 0; text-align: center; color: var(--teks-2); }
+
+/* ---------- layout dengan sidebar ---------- */
+.layout { display: flex; min-height: 100vh; }
+
+.sisi {
+  position: sticky;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  width: 248px;
+  height: 100vh;
+  padding: 16px 12px;
+  background: var(--panel);
+  border-right: 1px solid var(--garis);
+}
+.merek { display: flex; align-items: center; gap: 8px; padding: 4px 8px 16px; font-size: 16px; font-weight: 600; }
+.merek svg { color: var(--aksen); }
+
+.sisi nav { display: flex; flex-direction: column; gap: 2px; }
+.menu {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 10px;
+  font: inherit;
+  text-align: left;
+  text-decoration: none;
+  color: var(--teks-2);
+  background: none;
+  border: 0;
+  border-radius: var(--radius-kecil);
+  cursor: pointer;
+}
+.menu:hover { background: var(--latar); }
+.menu.aktif { color: var(--aksen); font-weight: 500; background: var(--aksen-lembut); }
+.bagian { padding: 16px 10px 4px; font-size: 11px; letter-spacing: .04em; text-transform: uppercase; color: var(--teks-3); }
+
+.sisi-bawah { margin-top: auto; padding-top: 12px; border-top: 1px solid var(--garis-halus); }
+.profil { display: flex; align-items: center; gap: 10px; padding: 4px 8px 8px; }
+.profil-nama { font-weight: 500; }
+.profil-peran { font-size: 12px; color: var(--teks-3); }
+.avatar {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  font-weight: 600;
+  color: var(--aksen);
+  background: var(--aksen-lembut);
+  border-radius: 50%;
+}
+.info-server { margin: 0; padding: 8px 10px 0; font-size: 11px; color: var(--teks-3); }
+
+.isi { flex: 1; min-width: 0; padding: 24px 32px; }
+.isi-kepala { margin-bottom: 20px; }
+.kartu { padding: 24px; background: var(--panel); border: 1px solid var(--garis); border-radius: var(--radius); }
+.kosong { padding: 48px 16px; text-align: center; color: var(--teks-3); }
+
+@media (max-width: 760px) {
+  .layout { flex-direction: column; }
+  .sisi { position: static; width: 100%; height: auto; border-right: 0; border-bottom: 1px solid var(--garis); }
+  .isi { padding: 16px; }
+}
