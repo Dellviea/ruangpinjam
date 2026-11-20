@@ -37,4 +37,27 @@ assert c.post("/api/login", json={"email": "tes@email.com", "password": "baru123
 
 assert c.delete(f"/api/pengguna/{id_}").status_code == 200
 assert c.get(f"/api/pengguna/{id_}").status_code == 404
+# register: peran selalu mahasiswa walau minta admin
+reg = {"nama": "Baru", "nim_nip": "888", "email": "Baru@Email.com", "password": "rahasia1", "peran": "admin"}
+r = c.post("/api/register", json=reg)
+assert r.status_code == 201
+assert r.get_json()["peran"] == "mahasiswa" and "password" not in r.get_json()
+reg_id = r.get_json()["id"]
+assert c.post("/api/login", json={"email": "baru@email.com", "password": "rahasia1"}).status_code == 200
+assert c.post("/api/register", json=reg).status_code == 400  # email kembar
+assert c.post("/api/register", json={**reg, "email": "y@email.com", "nim_nip": "777", "password": "1"}).status_code == 400
+assert c.post("/api/register", json={"nama": "Tanpa Email"}).status_code == 400
+assert c.post("/api/register", data="bukan json").status_code == 400
+
+# lupa password: harus cocok email + nim
+lupa = {"email": "baru@email.com", "nim": "888", "password_baru": "gantibaru1"}
+assert c.post("/api/lupa-password", json={**lupa, "nim": "000"}).status_code == 404  # nim salah
+assert c.post("/api/lupa-password", json={**lupa, "email": "tidakada@email.com"}).status_code == 404
+assert c.post("/api/lupa-password", json={**lupa, "password_baru": "123"}).status_code == 400
+assert c.post("/api/lupa-password", json={"email": "baru@email.com"}).status_code == 400
+assert c.post("/api/lupa-password", json=lupa).status_code == 200
+assert c.post("/api/login", json={"email": "baru@email.com", "password": "rahasia1"}).status_code == 401
+assert c.post("/api/login", json={"email": "baru@email.com", "password": "gantibaru1"}).status_code == 200
+
+c.delete(f"/api/pengguna/{reg_id}")
 print("semua cek lolos")

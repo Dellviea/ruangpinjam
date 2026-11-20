@@ -264,6 +264,38 @@ def login():
     return jsonify(publik(p))
 
 
+@app.post("/api/register")
+def register():
+    data = ambil_json()
+    if data is None:
+        return error("Body harus berupa JSON object")
+    # peran dipaksa mahasiswa, supaya tidak ada yang mendaftar sebagai admin
+    h, pesan = cek_pengguna({**data, "peran": "mahasiswa"})
+    if pesan:
+        return error(pesan)
+    h["id"] = max((p["id"] for p in pengguna), default=0) + 1
+    pengguna.append(h)
+    return jsonify(publik(h)), 201
+
+
+@app.post("/api/lupa-password")
+def lupa_password():
+    data = ambil_json()
+    if data is None:
+        return error("Body harus berupa JSON object")
+    email, nim, baru = data.get("email"), data.get("nim"), data.get("password_baru")
+    if not all(isinstance(x, str) and x.strip() for x in (email, nim, baru)):
+        return error("Email, nim, dan password_baru wajib diisi")
+    if len(baru) < 6:
+        return error("Password minimal 6 karakter")
+    p = next((p for p in pengguna
+              if p["email"] == email.strip().lower() and p["nim_nip"] == nim.strip()), None)
+    if not p:
+        return error("Email dan NIM tidak cocok", 404)
+    p["password"] = generate_password_hash(baru)
+    return jsonify(pesan="Password berhasil diganti")
+
+
 @app.get("/api/health")
 def health():
     return jsonify(
