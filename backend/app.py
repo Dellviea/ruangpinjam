@@ -168,7 +168,8 @@ def hapus_ruangan(id_):
     r = cari(ruangan, id_)
     if not r:
         return error("Ruangan tidak ditemukan", 404)
-    # ponytail: belum cek peminjaman terkait, ditambah di Tahap 3
+    if any(x["id_ruangan"] == id_ for x in peminjaman):
+        return error("Ruangan masih dipakai data peminjaman, hapus peminjamannya dulu", 409)
     ruangan.remove(r)
     return jsonify(pesan="Ruangan dihapus")
 
@@ -268,7 +269,8 @@ def hapus_pengguna(id_):
     p = cari(pengguna, id_)
     if not p:
         return error("Pengguna tidak ditemukan", 404)
-    # ponytail: belum cek peminjaman terkait, ditambah di Tahap 3
+    if any(x["id_pengguna"] == id_ for x in peminjaman):
+        return error("Pengguna masih punya data peminjaman, hapus peminjamannya dulu", 409)
     pengguna.remove(p)
     return jsonify(pesan="Pengguna dihapus")
 
