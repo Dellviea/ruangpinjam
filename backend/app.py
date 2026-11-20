@@ -224,7 +224,7 @@ def cek_pengguna(data, lama=None):
     return h, None
 
 
-# ponytail: belum ada token/sesi, semua endpoint pengguna masih terbuka
+# Belum ada token/sesi, jadi endpoint pengguna masih terbuka untuk siapa saja.
 @app.get("/api/pengguna")
 def daftar_pengguna():
     return jsonify([publik(p) for p in pengguna])
@@ -446,7 +446,7 @@ def tambah_peminjaman():
     return jsonify(tampil_peminjaman(h)), 201
 
 
-# ponytail: belum cek siapa pemiliknya, sama seperti pengguna (belum ada token/sesi)
+# Belum dicek siapa pemiliknya, karena belum ada token/sesi.
 @app.put("/api/peminjaman/<int:id_>")
 def ubah_peminjaman(id_):
     p = cari(peminjaman, id_)
