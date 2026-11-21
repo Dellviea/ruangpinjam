@@ -6,8 +6,8 @@ import { JENIS_KEGIATAN, JENIS_RUANGAN } from "./konstanta.js";
 const kolom = (id, labelKunci, kontrol, hint) =>
   h("div", { class: "medan" }, h("label", { for: id }, t(labelKunci)), kontrol, hint);
 
-// Pop-up pengajuan. awal = { id_ruangan, tanggal, jam_mulai, jam_selesai } (boleh kosong), onSukses(peminjaman).
-export function bukaPengajuan({ ruangan, awal = {}, onSukses }) {
+// Pop-up pengajuan. awal = isian awal (boleh kosong); idUbah = id peminjaman yang diubah (mode ubah).
+export function bukaPengajuan({ ruangan, awal = {}, onSukses, idUbah = null }) {
   const pengguna = ambilSesi();
 
   const pilihRuangan = h("select", { id: "p-ruangan", name: "id_ruangan" },
@@ -27,14 +27,18 @@ export function bukaPengajuan({ ruangan, awal = {}, onSukses }) {
   const pilihKegiatan = h("select", { id: "p-kegiatan", name: "jenis_kegiatan" },
     h("option", { value: "" }, t("pengajuan.pilihKegiatan")),
     ...JENIS_KEGIATAN.map((j) => h("option", { value: j }, j)));
+  pilihKegiatan.value = awal.jenis_kegiatan ?? "";
+  const isiKeperluan = h("textarea", { id: "p-keperluan", name: "keperluan", rows: 2, maxlength: 200 });
+  isiKeperluan.value = awal.keperluan ?? "";
 
   const cek = h("div", { class: "cek cek-netral", role: "status", "aria-live": "polite" });
   const galat = h("p", { class: "pesan-error", role: "alert" });
-  const kirim = h("button", { class: "tombol tombol-auto", type: "submit" }, t("pengajuan.kirim"));
+  const labelKirim = t(idUbah ? "pengajuan.simpan" : "pengajuan.kirim");
+  const kirim = h("button", { class: "tombol tombol-auto", type: "submit" }, labelKirim);
   const batal = h("button", { class: "tombol tombol-auto tombol-sekunder", type: "button" }, t("pengajuan.batal"));
 
   const form = h("form", { novalidate: true },
-    h("h2", { id: "dlg-judul" }, t("pengajuan.judul")),
+    h("h2", { id: "dlg-judul" }, t(idUbah ? "pengajuan.judulUbah" : "pengajuan.judul")),
     kolom("p-ruangan", "pengajuan.ruangan", pilihRuangan, hintKapasitas),
     kolom("p-kegiatan", "pengajuan.jenisKegiatan", pilihKegiatan),
     kolom("p-tanggal", "pengajuan.tanggal",
@@ -44,10 +48,10 @@ export function bukaPengajuan({ ruangan, awal = {}, onSukses }) {
         h("input", { id: "p-mulai", name: "jam_mulai", type: "time", value: awal.jam_mulai ?? "" })),
       kolom("p-selesai", "pengajuan.selesai",
         h("input", { id: "p-selesai", name: "jam_selesai", type: "time", value: awal.jam_selesai ?? "" }))),
-    kolom("p-keperluan", "pengajuan.keperluan",
-      h("textarea", { id: "p-keperluan", name: "keperluan", rows: 2, maxlength: 200 })),
+    kolom("p-keperluan", "pengajuan.keperluan", isiKeperluan),
     kolom("p-peserta", "pengajuan.peserta",
-      h("input", { id: "p-peserta", name: "jumlah_peserta", type: "number", min: 1, inputmode: "numeric" })),
+      h("input", { id: "p-peserta", name: "jumlah_peserta", type: "number", min: 1, inputmode: "numeric",
+        value: awal.jumlah_peserta ?? "" })),
     cek, galat,
     h("div", { class: "aksi" }, batal, kirim));
 
@@ -100,7 +104,7 @@ export function bukaPengajuan({ ruangan, awal = {}, onSukses }) {
     tampilCek("netral", "", t("pengajuan.cekProses"));
     pewaktu = setTimeout(async () => {
       try {
-        const hasil = await api("/peminjaman/cek", { method: "POST", body: d });
+        const hasil = await api("/peminjaman/cek", { method: "POST", body: { ...d, id_peminjaman: idUbah } });
         if (saya !== urutan) return; // sudah ada pengecekan yang lebih baru
         aman = hasil.aman;
         if (aman) tampilCek("aman", t("pengajuan.labelAman"), t("pengajuan.cekAman"));
@@ -129,14 +133,15 @@ export function bukaPengajuan({ ruangan, awal = {}, onSukses }) {
     aturTombol();
     kirim.textContent = t("pengajuan.proses");
     try {
-      const hasil = await api("/peminjaman", { method: "POST", body: d });
+      const hasil = await api(idUbah ? `/peminjaman/${idUbah}` : "/peminjaman",
+        { method: idUbah ? "PUT" : "POST", body: d });
       dialog.close();
       onSukses?.(hasil);
     } catch (err) {
       galat.textContent = err.message;
       mengirim = false;
       aturTombol();
-      kirim.textContent = t("pengajuan.kirim");
+      kirim.textContent = labelKirim;
     }
   });
 
