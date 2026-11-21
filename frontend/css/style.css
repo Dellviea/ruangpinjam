@@ -50,6 +50,10 @@ h1 { margin: 0; font-size: 20px; font-weight: 600; }
 .tombol-kecil { width: auto; gap: 6px; padding: 7px 12px; }
 .tombol-sekunder { color: var(--teks-2); background: var(--panel); border: 1px solid var(--garis); }
 .tombol-sekunder:hover { background: var(--latar); }
+.tombol-bahaya { color: var(--bahaya-teks); background: var(--panel); border: 1px solid var(--garis); }
+.tombol-bahaya:hover { background: var(--bahaya-bg); }
+.tombol-merah { background: var(--bahaya-teks); }
+.tombol-merah:hover { background: #7F2222; }
 .tombol:disabled { opacity: .6; cursor: not-allowed; }
 
 .pesan-error {
@@ -231,6 +235,39 @@ h1 { margin: 0; font-size: 20px; font-weight: 600; }
 .chip-milik { color: #fff; background: var(--aksen); }
 .chip-menunggu { color: var(--tunggu-teks); background: var(--tunggu-bg); }
 .chip-disetujui { color: var(--ok-teks); background: var(--ok-bg); }
+.chip-ditolak { color: var(--bahaya-teks); background: var(--bahaya-bg); }
+.chip-dibatalkan { color: var(--teks-2); background: var(--latar); }
+
+/* ---------- halaman peminjaman saya ---------- */
+.tab-baris { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 16px; border-bottom: 1px solid var(--garis); }
+.tab {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  font: inherit;
+  color: var(--teks-2);
+  background: none;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+}
+.tab:hover { color: var(--teks); }
+.tab[aria-selected="true"] { font-weight: 500; color: var(--aksen); border-bottom-color: var(--aksen); }
+.tab-jml { padding: 0 6px; font-size: 11px; line-height: 18px; color: var(--teks-2); background: var(--latar); border-radius: 4px; }
+
+.tabel-gulir { overflow-x: auto; background: var(--panel); border: 1px solid var(--garis); border-radius: var(--radius); }
+.tabel { width: 100%; min-width: 760px; border-collapse: collapse; }
+.tabel th { padding: 10px 10px; font-size: 12px; font-weight: 500; text-align: left; color: var(--teks-3); border-bottom: 1px solid var(--garis); }
+.tabel td { padding: 12px 10px; vertical-align: top; border-bottom: 1px solid var(--garis-halus); }
+.tabel tr:last-child td { border-bottom: 0; }
+.sel-utama { font-weight: 500; }
+.sel-sub { font-size: 12px; color: var(--teks-3); }
+.tabel .chip { padding: 1px 8px; font-size: 12px; line-height: 18px; }
+.alasan { margin: 6px 0 0; font-size: 12px; color: var(--bahaya-teks); }
+.tabel td:nth-child(2), .tabel td:nth-child(3), .tabel td:last-child { white-space: nowrap; }
+.tabel td:last-child { width: 1%; }
+.aksi-sel { display: flex; flex-wrap: nowrap; gap: 6px; }
 
 /* ---------- pop-up pengajuan ---------- */
 .dialog {
@@ -252,6 +289,9 @@ h1 { margin: 0; font-size: 20px; font-weight: 600; }
 .cek-aman { color: var(--ok-teks); background: var(--ok-bg); }
 .cek-bentrok { color: var(--bahaya-teks); background: var(--bahaya-bg); }
 .aksi { display: flex; justify-content: flex-end; gap: 8px; }
+.dialog-kecil { width: min(400px, calc(100vw - 32px)); }
+.dialog-isi { padding: 24px; }
+.dialog-teks { margin: 0 0 20px; color: var(--teks-2); }
 
 @media (max-width: 760px) {
   .layout { flex-direction: column; }
