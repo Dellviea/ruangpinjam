@@ -514,7 +514,8 @@ def cek_jadwal():
     # isian yang tidak mempengaruhi jadwal diberi nilai bawaan, supaya bisa dicek sebelum form lengkap
     data = {"jenis_kegiatan": "Lainnya", "keperluan": "-", "jumlah_peserta": 1,
             **{k: v for k, v in data.items() if v not in (None, "")}}
-    _, pesan, _ = cek_peminjaman(data)
+    # id_peminjaman (opsional): peminjaman yang sedang diubah, jangan dihitung sebagai bentrok
+    _, pesan, _ = cek_peminjaman(data, cari(peminjaman, data.get("id_peminjaman")))
     return jsonify(aman=pesan is None, pesan=pesan or "Jadwal tersedia")
 
 

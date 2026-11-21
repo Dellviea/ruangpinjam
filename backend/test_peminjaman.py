@@ -92,6 +92,13 @@ assert c.post("/api/peminjaman/cek", json={**cek, "jam_mulai": "13:00", "jam_sel
 assert c.post("/api/peminjaman/cek", json={**cek, "id_ruangan": 6}).get_json()["aman"] is False  # perbaikan
 assert c.post("/api/peminjaman/cek", json={"id_ruangan": 2}).get_json()["aman"] is False  # data belum lengkap
 assert c.post("/api/peminjaman/cek", data="bukan json").status_code == 400
+# cek saat mengubah: peminjaman itu sendiri tidak dianggap bentrok
+r = kirim(tanggal="2030-04-01", jam_mulai="09:00", jam_selesai="11:00")
+sendiri = r.get_json()["id"]
+cek_sendiri = {**cek, "tanggal": "2030-04-01"}
+assert c.post("/api/peminjaman/cek", json=cek_sendiri).get_json()["aman"] is False
+assert c.post("/api/peminjaman/cek", json={**cek_sendiri, "id_peminjaman": sendiri}).get_json()["aman"] is True
+assert c.post("/api/peminjaman/cek", json={**cek_sendiri, "id_peminjaman": 99999}).get_json()["aman"] is False
 # ruangan dan pengguna yang masih dipakai tidak bisa dihapus
 assert c.delete("/api/ruangan/2").status_code == 409
 assert c.delete("/api/pengguna/2").status_code == 409
