@@ -391,3 +391,20 @@ a.tombol { text-decoration: none; }
   .toast { animation: none; }
   .toast.keluar { transition: none; }
 }
+
+/* ---------- tampilan kosong ---------- */
+.kosong-rapi {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 48px 16px;
+  text-align: center;
+  background: var(--panel);
+  border: 1px solid var(--garis);
+  border-radius: var(--radius);
+}
+.kosong-ikon { display: grid; place-items: center; width: 56px; height: 56px; color: var(--aksen); background: var(--aksen-lembut); border-radius: 50%; }
+.kosong-judul { margin: 8px 0 0; font-size: 16px; font-weight: 600; }
+.kosong-teks { max-width: 420px; margin: 0 0 8px; color: var(--teks-2); }
+.j-hari-kosong { margin: 0 0 12px; font-size: 13px; color: var(--teks-3); }
