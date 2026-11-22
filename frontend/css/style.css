@@ -315,6 +315,9 @@ a.tombol { text-decoration: none; }
 .tabel-bebas { min-width: 900px; }
 .tabel-bebas td:nth-child(2), .tabel-bebas td:nth-child(3) { white-space: normal; }
 .tabel-bebas td.nowrap { white-space: nowrap; }
+.kelola-alat .tombol { margin-left: auto; }
+.chip-admin { color: var(--aksen-gelap); background: var(--aksen-lembut); }
+.chip-mhs { color: var(--teks-2); background: var(--latar); }
 
 /* ---------- pop-up pengajuan ---------- */
 .dialog {
