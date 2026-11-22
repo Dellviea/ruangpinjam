@@ -32,7 +32,7 @@ function menu(nama, aktif) {
     ikon(r.ikon), t(r.judul));
 }
 
-function layout(aktif, pengguna) {
+function layout(aktif, pengguna, query) {
   const keluar = h("button", { class: "menu", type: "button", onclick: () => {
     hapusSesi();
     location.hash = "#/login";
@@ -58,11 +58,13 @@ function layout(aktif, pengguna) {
   return h("div", { class: "layout" }, sisi,
     h("main", { class: "isi" },
       h("div", { class: "isi-kepala" }, h("h1", {}, t(RUTE[aktif].judul))),
-      RUTE[aktif].tampil()));
+      RUTE[aktif].tampil(query)));
 }
 
 function tampil() {
-  const nama = location.hash.replace(/^#\//, "");
+  // contoh hash: #/jadwal?jenis=Aula -> nama "jadwal", query jenis=Aula
+  const [nama, kueri = ""] = location.hash.replace(/^#\//, "").split("?");
+  const query = new URLSearchParams(kueri);
   const pengguna = ambilSesi();
   const r = RUTE[nama];
 
@@ -77,7 +79,7 @@ function tampil() {
     return;
   }
 
-  root.replaceChildren(r.publik ? r.tampil() : layout(nama, pengguna));
+  root.replaceChildren(r.publik ? r.tampil(query) : layout(nama, pengguna, query));
   document.title = `${t(r.judul ?? nama + ".judul")} · ${t("app.nama")}`;
 }
 

@@ -11,12 +11,12 @@ const JAM_AKHIR = 21;
 const JUMLAH_JAM = JAM_AKHIR - JAM_AWAL;
 const LEBAR_JAM = 84; // px
 
-export function halamanJadwal() {
+export function halamanJadwal(query = new URLSearchParams()) {
   const pengguna = ambilSesi();
   let ruangan = [];
   let peminjaman = [];
   let tanggal = tanggalLokal();
-  let jenis = "";
+  let jenis = JENIS_RUANGAN.includes(query.get("jenis")) ? query.get("jenis") : ""; // dari tombol "Lihat jadwal"
 
   const info = h("p", { class: "pesan-ok", role: "status" });
   const galat = h("p", { class: "pesan-error", role: "alert" });
@@ -138,6 +138,7 @@ export function halamanJadwal() {
     onchange: (e) => { jenis = e.target.value; gambar(false); } },
     h("option", { value: "" }, t("jadwal.semuaJenis")),
     ...JENIS_RUANGAN.map((j) => h("option", { value: j }, j)));
+  filter.value = jenis;
 
   const halaman = h("div", { class: "jadwal" },
     h("div", { class: "j-alat" },
