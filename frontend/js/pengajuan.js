@@ -1,6 +1,6 @@
 import { api, ambilSesi } from "./api.js";
 import { h } from "./dom.js";
-import { t } from "./i18n.js";
+import { jenisRuangan, kegiatan, t } from "./i18n.js";
 import { JENIS_KEGIATAN, JENIS_RUANGAN } from "./konstanta.js";
 
 const kolom = (id, labelKunci, kontrol, hint) =>
@@ -15,7 +15,7 @@ export function bukaPengajuan({ ruangan, awal = {}, onSukses, idUbah = null }) {
     ...JENIS_RUANGAN.map((jenis) => {
       const daftar = ruangan.filter((r) => r.jenis === jenis);
       if (!daftar.length) return null;
-      return h("optgroup", { label: jenis }, ...daftar.map((r) => {
+      return h("optgroup", { label: jenisRuangan(jenis) }, ...daftar.map((r) => {
         const rusak = r.status !== "tersedia";
         return h("option", { value: r.id, disabled: rusak },
           `${r.nama} (${t("jadwal.kapasitas", { n: r.kapasitas })})` + (rusak ? t("pengajuan.perbaikan") : ""));
@@ -26,7 +26,7 @@ export function bukaPengajuan({ ruangan, awal = {}, onSukses, idUbah = null }) {
 
   const pilihKegiatan = h("select", { id: "p-kegiatan", name: "jenis_kegiatan" },
     h("option", { value: "" }, t("pengajuan.pilihKegiatan")),
-    ...JENIS_KEGIATAN.map((j) => h("option", { value: j }, j)));
+    ...JENIS_KEGIATAN.map((j) => h("option", { value: j }, kegiatan(j))));
   pilihKegiatan.value = awal.jenis_kegiatan ?? "";
   const isiKeperluan = h("textarea", { id: "p-keperluan", name: "keperluan", rows: 2, maxlength: 200 });
   isiKeperluan.value = awal.keperluan ?? "";

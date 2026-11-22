@@ -1,16 +1,18 @@
 import { api, ambilSesi, simpanSesi } from "./api.js";
 import { h, ikon } from "./dom.js";
 import { bukaForm } from "./form.js";
-import { t } from "./i18n.js";
+import { jenisRuangan, kegiatan, t } from "./i18n.js";
 import { konfirmasi } from "./konfirmasi.js";
+import { tampilanGagal, tampilanKosong } from "./kosong.js";
 import { JENIS_KEGIATAN, JENIS_RUANGAN } from "./konstanta.js";
 import { buatTab } from "./tab.js";
+import { toast } from "./toast.js";
 import { tanggalLokal, tanggalPendek } from "./waktu.js";
 
 const TAB = ["ruangan", "pengguna", "peminjaman"];
 const chip = (kelas, teks) => h("span", { class: "chip " + kelas }, teks);
 const utama = (teks, sub) => h("td", {}, h("div", { class: "sel-utama" }, teks), sub && h("div", { class: "sel-sub" }, sub));
-const pilihan = (daftar) => daftar.map((x) => ({ nilai: x, label: x }));
+const pilihan = (daftar, label = (x) => x) => daftar.map((x) => ({ nilai: x, label: label(x) }));
 
 export function halamanKelola() {
   const saya = ambilSesi();
@@ -18,8 +20,6 @@ export function halamanKelola() {
   const kata = { ruangan: "", pengguna: "", peminjaman: "" };
   let aktif = "ruangan";
 
-  const info = h("p", { class: "pesan-ok", role: "status" });
-  const galat = h("p", { class: "pesan-error", role: "alert" });
   const jumlah = h("p", { class: "r-jumlah", "aria-live": "polite" });
   const wadah = h("div", {}, h("div", { class: "kosong" }, t("jadwal.memuat")));
 
@@ -30,14 +30,14 @@ export function halamanKelola() {
       kolom: ["kode", "nama", "gedung", "kapasitas", "jam", "status"],
       sel: (r) => [
         h("td", {}, r.kode),
-        utama(r.nama, r.jenis),
+        utama(r.nama, jenisRuangan(r.jenis)),
         utama(r.gedung, r.lantai && r.lantai !== "-" ? t("ruangan.lantai", { n: r.lantai }) : null),
         h("td", { class: "nowrap" }, r.kapasitas),
         h("td", { class: "nowrap" }, `${r.jam_buka}–${r.jam_tutup}`),
         h("td", {}, r.status === "tersedia" ? chip("chip-kosong", t("kelola.tersedia"))
           : chip("chip-perbaikan", t("ruangan.status.perbaikan"))),
       ],
-      cari: (r) => [r.kode, r.nama, r.jenis, r.gedung].join(" "),
+      cari: (r) => [r.kode, r.nama, r.jenis, jenisRuangan(r.jenis), r.gedung].join(" "),
       urut: (a, b) => JENIS_RUANGAN.indexOf(a.jenis) - JENIS_RUANGAN.indexOf(b.jenis) || a.id - b.id,
       nama: (r) => r.nama,
       awal: () => ({ jam_buka: "07:00", jam_tutup: "21:00", status: "tersedia" }),
@@ -45,7 +45,7 @@ export function halamanKelola() {
         { nama: "kode", label: t("kelola.f.kode"), wajib: true, setengah: true },
         { nama: "nama", label: t("kelola.f.nama"), wajib: true, setengah: true },
         { nama: "jenis", label: t("kelola.f.jenis"), jenis: "select", wajib: true, kosong: t("kelola.pilih"),
-          pilihan: pilihan(JENIS_RUANGAN), setengah: true },
+          pilihan: pilihan(JENIS_RUANGAN, jenisRuangan), setengah: true },
         { nama: "status", label: t("kelola.f.status"), jenis: "select", wajib: true, setengah: true,
           pilihan: [{ nilai: "tersedia", label: t("kelola.tersedia") },
             { nilai: "dalam perbaikan", label: t("ruangan.status.perbaikan") }] },
@@ -103,11 +103,11 @@ export function halamanKelola() {
         h("td", {}, p.nama_ruangan),
         h("td", { class: "nowrap" }, h("div", {}, tanggalPendek(p.tanggal)),
           h("div", { class: "sel-sub" }, `${p.jam_mulai}–${p.jam_selesai}`)),
-        utama(p.keperluan, p.jenis_kegiatan),
+        utama(p.keperluan, kegiatan(p.jenis_kegiatan)),
         h("td", { class: "nowrap" }, p.jumlah_peserta),
         h("td", {}, chip("chip-" + p.status, t("status." + p.status))),
       ],
-      cari: (p) => [p.nama_pengguna, p.nama_ruangan, p.keperluan, p.jenis_kegiatan, t("status." + p.status)].join(" "),
+      cari: (p) => [p.nama_pengguna, p.nama_ruangan, p.keperluan, p.jenis_kegiatan, kegiatan(p.jenis_kegiatan), t("status." + p.status)].join(" "),
       urut: (a, b) => (b.tanggal + b.jam_mulai).localeCompare(a.tanggal + a.jam_mulai),
       nama: (p) => `${p.keperluan} (${p.nama_ruangan}, ${tanggalPendek(p.tanggal)})`,
       awal: () => ({ tanggal: tanggalLokal() }),
@@ -124,7 +124,7 @@ export function halamanKelola() {
         { nama: "jam_mulai", label: t("pengajuan.mulai"), jenis: "time", wajib: true, setengah: true },
         { nama: "jam_selesai", label: t("pengajuan.selesai"), jenis: "time", wajib: true, setengah: true },
         { nama: "jenis_kegiatan", label: t("pengajuan.jenisKegiatan"), jenis: "select", wajib: true,
-          kosong: t("pengajuan.pilihKegiatan"), pilihan: pilihan(JENIS_KEGIATAN) },
+          kosong: t("pengajuan.pilihKegiatan"), pilihan: pilihan(JENIS_KEGIATAN, kegiatan) },
         { nama: "keperluan", label: t("pengajuan.keperluan"), wajib: true },
         { nama: "jumlah_peserta", label: t("pengajuan.peserta"), jenis: "number", min: 1, wajib: true },
       ],
@@ -148,8 +148,7 @@ export function halamanKelola() {
           window.dispatchEvent(new Event("hashchange"));
           return;
         }
-        info.textContent = t(ubah ? "kelola.diubah" : "kelola.ditambah");
-        galat.textContent = "";
+        toast(t(ubah ? "kelola.diubah" : "kelola.ditambah"));
         muat();
       },
     });
@@ -163,14 +162,12 @@ export function halamanKelola() {
       bahaya: true,
     });
     if (!ya) return;
-    info.textContent = "";
-    galat.textContent = "";
     try {
       await api(`${k.jalur}/${baris.id}`, { method: "DELETE" });
-      info.textContent = t("kelola.dihapus");
+      toast(t("kelola.dihapus"));
       muat();
     } catch (err) {
-      galat.textContent = err.message; // misalnya: masih dipakai data peminjaman
+      toast(err.message, "error"); // misalnya: masih dipakai data peminjaman
     }
   }
 
@@ -189,8 +186,6 @@ export function halamanKelola() {
     pilihan: TAB.map((k) => ({ kunci: k, teks: t("kelola.tab." + k) })),
     onPilih: (k) => {
       aktif = k;
-      info.textContent = "";
-      galat.textContent = "";
       gambar();
     },
   });
@@ -205,7 +200,12 @@ export function halamanKelola() {
     const baris = data[aktif].filter((r) => k.cari(r).toLowerCase().includes(kata[aktif])).sort(k.urut);
     jumlah.textContent = t("kelola.jumlah", { n: baris.length });
     if (!baris.length) {
-      wadah.replaceChildren(h("div", { class: "kartu kosong" }, t("kelola.kosong")));
+      const satuan = t("kelola.satuan." + aktif);
+      wadah.replaceChildren(data[aktif].length
+        ? tampilanKosong({ gambar: "cari", judul: t("kelola.kosongJudul"), teks: t("kelola.kosong"),
+          tombol: { teks: t("kelola.reset"), aksi: () => { kata[aktif] = ""; cari.value = ""; gambarTabel(); } } })
+        : tampilanKosong({ gambar: "kelola", judul: t("kelola.belumAdaJudul", { data: satuan }),
+          teks: t("kelola.belumAdaTeks"), tombol: { teks: t("kelola.tambahAria", { data: satuan }), aksi: () => formData(k) } }));
       return;
     }
     wadah.replaceChildren(h("div", { class: "tabel-gulir" },
@@ -229,7 +229,9 @@ export function halamanKelola() {
       Object.assign(data, { ruangan, pengguna, peminjaman });
       gambar();
     } catch (err) {
-      galat.textContent = err.message;
+      toast(err.message, "error");
+      jumlah.textContent = "";
+      wadah.replaceChildren(tampilanGagal(err.message, muat));
     }
   }
 
@@ -238,5 +240,5 @@ export function halamanKelola() {
     h("div", { role: "tabpanel", id: "panel-kelola", "aria-labelledby": `tab-panel-kelola-${aktif}` },
       h("div", { class: "r-alat kelola-alat" },
         h("div", { class: "cari" }, ikon("cari"), cari), tambah),
-      jumlah, info, galat, wadah));
+      jumlah, wadah));
 }

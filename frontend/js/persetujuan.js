@@ -1,27 +1,26 @@
 import { api } from "./api.js";
 import { h } from "./dom.js";
 import { bukaForm } from "./form.js";
-import { t } from "./i18n.js";
+import { kegiatan, t } from "./i18n.js";
+import { tampilanGagal, tampilanKosong } from "./kosong.js";
+import { toast } from "./toast.js";
 import { tanggalPendek } from "./waktu.js";
 
 export function halamanPersetujuan() {
   let ruangan = [];
   let menunggu = []; // pengajuan berstatus menunggu, yang paling dekat jadwalnya di atas
 
-  const info = h("p", { class: "pesan-ok", role: "status" });
-  const galat = h("p", { class: "pesan-error", role: "alert" });
   const jumlah = h("p", { class: "info-jumlah", "aria-live": "polite" });
   const panel = h("div", {}, h("div", { class: "kosong" }, t("jadwal.memuat")));
 
   async function setujui(p, tombol) {
-    galat.textContent = "";
     tombol.disabled = true;
     try {
       await api(`/peminjaman/${p.id}/setujui`, { method: "PUT" });
-      info.textContent = t("persetujuan.disetujui", { keperluan: p.keperluan });
+      toast(t("persetujuan.disetujui", { keperluan: p.keperluan }));
       muat();
     } catch (err) {
-      galat.textContent = err.message;
+      toast(err.message, "error");
       tombol.disabled = false;
     }
   }
@@ -36,7 +35,7 @@ export function halamanPersetujuan() {
       bahaya: true,
       simpan: (v) => api(`/peminjaman/${p.id}/tolak`, { method: "PUT", body: { alasan: v.alasan } }),
       onSukses: () => {
-        info.textContent = t("persetujuan.ditolak", { keperluan: p.keperluan });
+        toast(t("persetujuan.ditolak", { keperluan: p.keperluan }));
         muat();
       },
     });
@@ -54,7 +53,7 @@ export function halamanPersetujuan() {
         h("div", { class: "sel-sub" }, `${p.jam_mulai}–${p.jam_selesai}`)),
       h("td", {},
         h("div", { class: "sel-utama" }, p.keperluan),
-        h("div", { class: "sel-sub" }, p.jenis_kegiatan)),
+        h("div", { class: "sel-sub" }, kegiatan(p.jenis_kegiatan))),
       h("td", { class: "nowrap" }, `${p.jumlah_peserta} / ${r ? r.kapasitas : "?"}`),
       h("td", {}, h("div", { class: "aksi-sel" }, tombolSetuju,
         h("button", { class: "tombol tombol-kecil tombol-bahaya", type: "button", onclick: () => tolak(p) },
@@ -64,7 +63,8 @@ export function halamanPersetujuan() {
   function gambar() {
     jumlah.textContent = t("persetujuan.jumlah", { n: menunggu.length });
     if (!menunggu.length) {
-      panel.replaceChildren(h("div", { class: "kartu kosong" }, t("persetujuan.kosong")));
+      panel.replaceChildren(tampilanKosong({ gambar: "persetujuan", judul: t("persetujuan.kosongJudul"),
+        teks: t("persetujuan.kosong"), tombol: { teks: t("persetujuan.keJadwal"), href: "#/jadwal" } }));
       return;
     }
     const kolom = ["Peminjam", "Ruangan", "Waktu", "Kegiatan", "Peserta", "Aksi"];
@@ -75,7 +75,6 @@ export function halamanPersetujuan() {
   }
 
   async function muat() {
-    galat.textContent = "";
     try {
       const [r, semua] = await Promise.all([api("/ruangan"), api("/peminjaman")]);
       ruangan = r;
@@ -83,10 +82,12 @@ export function halamanPersetujuan() {
         .sort((a, b) => (a.tanggal + a.jam_mulai).localeCompare(b.tanggal + b.jam_mulai));
       gambar();
     } catch (err) {
-      galat.textContent = err.message;
+      toast(err.message, "error");
+      jumlah.textContent = "";
+      panel.replaceChildren(tampilanGagal(err.message, muat));
     }
   }
 
   muat();
-  return h("div", {}, jumlah, info, galat, panel);
+  return h("div", {}, jumlah, panel);
 }

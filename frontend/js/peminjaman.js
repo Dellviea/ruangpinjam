@@ -1,8 +1,10 @@
 import { api, ambilSesi } from "./api.js";
 import { h } from "./dom.js";
-import { t } from "./i18n.js";
+import { kegiatan, t } from "./i18n.js";
 import { konfirmasi } from "./konfirmasi.js";
+import { tampilanGagal, tampilanKosong } from "./kosong.js";
 import { bukaPengajuan } from "./pengajuan.js";
+import { toast } from "./toast.js";
 import { tanggalPendek } from "./waktu.js";
 
 const TAB = ["semua", "menunggu", "disetujui", "ditolak", "dibatalkan"];
@@ -13,8 +15,6 @@ export function halamanPeminjaman() {
   let milik = []; // peminjaman milik pengguna yang login, terbaru di atas
   let tabAktif = "semua";
 
-  const info = h("p", { class: "pesan-ok", role: "status" });
-  const galat = h("p", { class: "pesan-error", role: "alert" });
   const panel = h("div", { role: "tabpanel", id: "panel-peminjaman" });
 
   // ----- tab (dibuat sekali supaya fokus keyboard tidak hilang) -----
@@ -28,7 +28,6 @@ export function halamanPeminjaman() {
 
   function pilihTab(s, fokus = false) {
     tabAktif = s;
-    info.textContent = "";
     gambar();
     if (fokus) tab[s].el.focus();
   }
@@ -50,12 +49,12 @@ export function halamanPeminjaman() {
 
   function ubah(p) {
     bukaPengajuan({ ruangan, idUbah: p.id, awal: awalDari(p),
-      onSukses: () => { info.textContent = t("peminjaman.diperbarui"); muat(); } });
+      onSukses: () => { toast(t("peminjaman.diperbarui")); muat(); } });
   }
 
   function ajukanUlang(p) {
     bukaPengajuan({ ruangan, awal: awalDari(p),
-      onSukses: () => { info.textContent = t("peminjaman.terkirimUlang"); muat(); } });
+      onSukses: () => { toast(t("peminjaman.terkirimUlang")); muat(); } });
   }
 
   async function batalkan(p) {
@@ -67,13 +66,12 @@ export function halamanPeminjaman() {
       bahaya: true,
     });
     if (!ya) return;
-    galat.textContent = "";
     try {
       await api(`/peminjaman/${p.id}`, { method: "PUT", body: { status: "dibatalkan" } });
-      info.textContent = t("peminjaman.dibatalkan");
+      toast(t("peminjaman.dibatalkan"));
       muat();
     } catch (err) {
-      galat.textContent = err.message;
+      toast(err.message, "error");
     }
   }
 
@@ -97,7 +95,7 @@ export function halamanPeminjaman() {
       h("td", {}, `${p.jam_mulai}–${p.jam_selesai}`),
       h("td", {},
         h("div", { class: "sel-utama" }, p.keperluan),
-        h("div", { class: "sel-sub" }, `${p.jenis_kegiatan} · ${t("peminjaman.peserta", { n: p.jumlah_peserta })}`)),
+        h("div", { class: "sel-sub" }, `${kegiatan(p.jenis_kegiatan)} · ${t("peminjaman.peserta", { n: p.jumlah_peserta })}`)),
       h("td", {},
         h("span", { class: "chip chip-" + p.status }, t("status." + p.status)),
         p.status === "ditolak" && h("p", { class: "alasan" }, t("peminjaman.alasan", { alasan: p.alasan_penolakan }))),
@@ -115,9 +113,11 @@ export function halamanPeminjaman() {
 
     const daftar = tabAktif === "semua" ? milik : milik.filter((p) => p.status === tabAktif);
     if (!daftar.length) {
-      panel.replaceChildren(h("div", { class: "kartu kosong" },
-        h("p", {}, t(milik.length ? "peminjaman.kosongStatus" : "peminjaman.kosongSemua")),
-        !milik.length && h("a", { href: "#/jadwal" }, t("peminjaman.keJadwal"))));
+      panel.replaceChildren(milik.length
+        ? tampilanKosong({ gambar: "peminjaman", judul: t("peminjaman.kosongStatusJudul"), teks: t("peminjaman.kosongStatus"),
+          tombol: { teks: t("peminjaman.lihatSemua"), aksi: () => { pilihTab("semua", true); } } })
+        : tampilanKosong({ gambar: "peminjaman", judul: t("peminjaman.kosongSemuaJudul"), teks: t("peminjaman.kosongSemua"),
+          tombol: { teks: t("peminjaman.keJadwal"), href: "#/jadwal" } }));
       return;
     }
     const kolom = ["Ruangan", "Tanggal", "Jam", "Kegiatan", "Status", "Aksi"];
@@ -128,7 +128,6 @@ export function halamanPeminjaman() {
   }
 
   async function muat() {
-    galat.textContent = "";
     try {
       const [r, semua] = await Promise.all([api("/ruangan"), api("/peminjaman")]);
       ruangan = r;
@@ -136,7 +135,8 @@ export function halamanPeminjaman() {
         .sort((a, b) => (b.tanggal + b.jam_mulai).localeCompare(a.tanggal + a.jam_mulai));
       gambar();
     } catch (err) {
-      galat.textContent = err.message;
+      toast(err.message, "error");
+      panel.replaceChildren(tampilanGagal(err.message, muat));
     }
   }
 
@@ -144,5 +144,5 @@ export function halamanPeminjaman() {
   muat();
   return h("div", {},
     h("div", { class: "tab-baris", role: "tablist", "aria-label": t("peminjaman.tab") }, ...TAB.map((s) => tab[s].el)),
-    info, galat, panel);
+    panel);
 }

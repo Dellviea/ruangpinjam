@@ -1,8 +1,10 @@
 import { api, ambilSesi } from "./api.js";
 import { h, ikon } from "./dom.js";
-import { t } from "./i18n.js";
+import { jenisRuangan, t } from "./i18n.js";
+import { tampilanGagal, tampilanKosong } from "./kosong.js";
 import { JENIS_RUANGAN } from "./konstanta.js";
 import { bukaPengajuan } from "./pengajuan.js";
+import { toast } from "./toast.js";
 import { geserHari, menit, namaHari, pad, tanggalLokal } from "./waktu.js";
 
 // Kolom tabel: satu kolom per jam, dari 07:00 sampai 21:00.
@@ -18,8 +20,7 @@ export function halamanJadwal(query = new URLSearchParams()) {
   let tanggal = tanggalLokal();
   let jenis = JENIS_RUANGAN.includes(query.get("jenis")) ? query.get("jenis") : ""; // dari tombol "Lihat jadwal"
 
-  const info = h("p", { class: "pesan-ok", role: "status" });
-  const galat = h("p", { class: "pesan-error", role: "alert" });
+  const hariKosong = h("p", { class: "j-hari-kosong" });
   const labelHari = h("span", { class: "hari-label" });
   const inputTanggal = h("input", { type: "date", class: "kontrol", "aria-label": t("jadwal.tanggal"),
     onchange: (e) => e.target.value && pindahTanggal(e.target.value) });
@@ -74,12 +75,14 @@ export function halamanJadwal(query = new URLSearchParams()) {
     inputTanggal.value = tanggal;
 
     const aktif = peminjaman.filter((p) => p.tanggal === tanggal && ["menunggu", "disetujui"].includes(p.status));
+    hariKosong.textContent = aktif.length ? "" : t("jadwal.hariKosong");
     const kelompok = JENIS_RUANGAN.filter((j) => !jenis || j === jenis)
       .map((j) => ({ jenis: j, daftar: ruangan.filter((r) => r.jenis === j) }))
       .filter((k) => k.daftar.length);
 
     if (!kelompok.length) {
-      wadah.replaceChildren(h("div", { class: "kosong" }, t("jadwal.kosong")));
+      wadah.replaceChildren(tampilanKosong({ gambar: "ruangan", judul: t("jadwal.kosongJudul"), teks: t("jadwal.kosong"),
+        tombol: { teks: t("jadwal.tampilSemua"), aksi: () => { jenis = ""; filter.value = ""; gambar(false); } } }));
       return;
     }
     const jam = Array.from({ length: JUMLAH_JAM }, (_, i) => h("span", {}, `${pad(JAM_AWAL + i)}:00`));
@@ -87,7 +90,7 @@ export function halamanJadwal(query = new URLSearchParams()) {
       h("div", { class: "j-kepala" }, h("div", { class: "j-ruang-label" }, t("jadwal.ruangan")),
         h("div", { class: "j-jam-label" }, ...jam)),
       ...kelompok.flatMap((k) => [
-        h("div", { class: "j-kelompok" }, h("span", {}, k.jenis)),
+        h("div", { class: "j-kelompok" }, h("span", {}, jenisRuangan(k.jenis))),
         ...k.daftar.map((r) => baris(r, aktif.filter((p) => p.id_ruangan === r.id))),
       ])));
 
@@ -98,18 +101,17 @@ export function halamanJadwal(query = new URLSearchParams()) {
 
   // ----- data dan aksi -----
   async function muat(gulir = false) {
-    galat.textContent = "";
     try {
       [ruangan, peminjaman] = await Promise.all([api("/ruangan"), api("/peminjaman")]);
       gambar(gulir);
     } catch (err) {
-      galat.textContent = err.message;
+      toast(err.message, "error");
+      wadah.replaceChildren(tampilanGagal(err.message, () => muat(gulir)));
     }
   }
 
   function pindahTanggal(tgl) {
     tanggal = tgl;
-    info.textContent = "";
     if (ruangan.length) gambar(true);
     else muat(true);
   }
@@ -124,7 +126,7 @@ export function halamanJadwal(query = new URLSearchParams()) {
         jam_selesai: jam == null ? "" : `${pad(jam + 1)}:00`,
       },
       onSukses: () => {
-        info.textContent = t("jadwal.terkirim");
+        toast(t("jadwal.terkirim"));
         muat();
       },
     });
@@ -137,7 +139,7 @@ export function halamanJadwal(query = new URLSearchParams()) {
   const filter = h("select", { class: "kontrol", "aria-label": t("jadwal.jenis"),
     onchange: (e) => { jenis = e.target.value; gambar(false); } },
     h("option", { value: "" }, t("jadwal.semuaJenis")),
-    ...JENIS_RUANGAN.map((j) => h("option", { value: j }, j)));
+    ...JENIS_RUANGAN.map((j) => h("option", { value: j }, jenisRuangan(j))));
   filter.value = jenis;
 
   const halaman = h("div", { class: "jadwal" },
@@ -158,7 +160,7 @@ export function halamanJadwal(query = new URLSearchParams()) {
       h("span", {}, h("i", { class: "sw sw-lain" }), t("jadwal.lain")),
       h("span", {}, h("i", { class: "sw sw-tutup" }), t("jadwal.tutup")),
       h("span", {}, t("jadwal.petunjuk"))),
-    info, galat, wadah);
+    hariKosong, wadah);
 
   muat(true);
   return halaman;
