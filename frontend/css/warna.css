@@ -1,5 +1,8 @@
-/* Semua warna aplikasi ada di sini. Ganti nilainya untuk mengubah tema. */
+/* Semua warna aplikasi ada di sini. Ganti nilainya untuk mengubah tema.
+   Mode terang adalah bawaan; mode gelap aktif lewat html[data-tema="gelap"] (diatur js/tema.js). */
 :root {
+  color-scheme: light;
+
   --latar: #F2F2F4;
   --panel: #FFFFFF;
   --garis: #DEDEE3;
@@ -10,8 +13,9 @@
   --teks-3: #666670;
 
   --aksen: #B04A72;
-  --aksen-gelap: #963E60;
+  --aksen-gelap: #963E60;      /* hover tombol utama dan teks di atas pink lembut */
   --aksen-lembut: #F7E4EC;
+  --aksen-teks: #FFFFFF;       /* teks di atas warna aksen */
 
   /* jadwal orang lain */
   --lain-bg: #E4EDF6;
@@ -26,6 +30,48 @@
   --bahaya-bg: #FBE4E4;
   --bahaya-teks: #9B2C2C;
 
+  /* tombol berbahaya (tolak/hapus) */
+  --merah: #9B2C2C;
+  --merah-hover: #7F2222;
+  --merah-teks: #FFFFFF;
+
+  --bayangan: 0 4px 12px rgba(20, 20, 23, .12);
+
   --radius: 8px;
   --radius-kecil: 6px;
+}
+
+:root[data-tema="gelap"] {
+  color-scheme: dark;
+
+  --latar: #151518;
+  --panel: #1E1E22;
+  --garis: #34343B;
+  --garis-halus: #2A2A30;
+
+  --teks: #F2F2F4;
+  --teks-2: #C9C9D1;
+  --teks-3: #9A9AA6;
+
+  --aksen: #E07AA2;
+  --aksen-gelap: #F0A5C2;
+  --aksen-lembut: #3A2230;
+  --aksen-teks: #151518;
+
+  --lain-bg: #1F2D3D;
+  --lain-garis: #34506B;
+  --lain-teks: #BCD3EA;
+
+  --ok-bg: #17301F;
+  --ok-teks: #7FD99B;
+  --tunggu-bg: #3A3014;
+  --tunggu-teks: #E8C562;
+  --bahaya-bg: #3B1D1F;
+  --bahaya-teks: #F29A9A;
+
+  --merah: #F28B8B;
+  --merah-hover: #F5A3A3;
+  --merah-teks: #151518;
+
+  --bayangan: 0 4px 14px rgba(0, 0, 0, .5);
 }

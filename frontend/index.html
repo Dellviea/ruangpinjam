@@ -1,9 +1,21 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="id">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
   <title>PinjamRuang</title>
+  <script>
+    // tema dan bahasa tersimpan diterapkan sebelum gambar pertama; logika lengkapnya ada di js/tema.js dan js/i18n.js
+    (function () {
+      try {
+        var m = localStorage.getItem("pinjamruang_mode");
+        var gelap = m === "gelap" || (m !== "terang" && matchMedia("(prefers-color-scheme: dark)").matches);
+        document.documentElement.dataset.tema = gelap ? "gelap" : "terang";
+        document.documentElement.lang = localStorage.getItem("pinjamruang_bahasa") === "en" ? "en" : "id";
+      } catch (e) {}
+    })();
+  </script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap">
