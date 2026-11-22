@@ -24,13 +24,15 @@ const IKON = {
   kanan: '<path d="m9 6 6 6-6 6"/>',
   orang: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0M16 4.5a3.5 3.5 0 0 1 0 7M18.5 14.5a6.5 6.5 0 0 1 3 5.5"/>',
   cari: '<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>',
+  peringatan: '<path d="M12 4 2.5 20h19L12 4zM12 10v4M12 17.5v.01"/>',
+  tutup: '<path d="M6 6l12 12M18 6 6 18"/>',
   tambah: '<path d="M12 5v14M5 12h14"/>',
 };
 
-export function ikon(nama) {
+export function ikon(nama, ukuran = 18) {
   const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
   for (const [k, v] of Object.entries({
-    width: 18, height: 18, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor",
+    width: ukuran, height: ukuran, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor",
     "stroke-width": 1.5, "stroke-linecap": "round", "stroke-linejoin": "round", "aria-hidden": "true",
   })) svg.setAttribute(k, v);
   svg.innerHTML = IKON[nama]; // string tetap di atas, bukan input pengguna
