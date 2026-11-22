@@ -78,7 +78,7 @@ h1 { margin: 0; font-size: 20px; font-weight: 600; }
 .lupa-baris { margin: -8px 0 16px; font-size: 13px; text-align: right; }
 
 /* ---------- halaman login dan register ---------- */
-.auth { min-height: 100vh; display: grid; place-items: center; padding: 24px; }
+.auth { min-height: 100vh; display: grid; place-items: center; padding: 56px 24px 24px; } /* ruang di atas untuk kontrol bahasa/mode */
 .auth-kartu {
   width: 100%;
   max-width: 400px;
@@ -408,3 +408,25 @@ a.tombol { text-decoration: none; }
 .kosong-judul { margin: 8px 0 0; font-size: 16px; font-weight: 600; }
 .kosong-teks { max-width: 420px; margin: 0 0 8px; color: var(--teks-2); }
 .j-hari-kosong { margin: 0 0 12px; font-size: 13px; color: var(--teks-3); }
+
+/* ---------- bahasa dan mode tampilan (sidebar) ---------- */
+.tampilan { display: flex; flex-direction: column; gap: 10px; padding: 0 8px 12px; }
+.tampilan-label { display: block; margin-bottom: 4px; font-size: 11px; letter-spacing: .04em; text-transform: uppercase; color: var(--teks-3); }
+.seg-grup { display: flex; overflow: hidden; border: 1px solid var(--garis); border-radius: var(--radius-kecil); }
+.seg { flex: 1; padding: 5px 8px; font: inherit; font-size: 12px; color: var(--teks-2); background: var(--panel); border: 0; cursor: pointer; }
+.seg + .seg { border-left: 1px solid var(--garis); }
+.seg:hover { background: var(--latar); }
+.seg[aria-pressed="true"] { font-weight: 500; color: var(--aksen-gelap); background: var(--aksen-lembut); }
+.tampilan-kecil { display: flex; gap: 8px; }
+.tampilan-kecil .seg { padding: 3px 9px; font-size: 11px; }
+.pojok-tampilan { position: fixed; top: 12px; right: 16px; z-index: 5; }
+.info-server { display: flex; align-items: center; }
+.titik { display: inline-block; flex-shrink: 0; width: 8px; height: 8px; margin-right: 6px; background: var(--garis); border-radius: 50%; }
+.titik-ok { background: var(--ok-teks); }
+.titik-mati { background: var(--bahaya-teks); }
+
+/* layar sempit: ditaruh paling akhir supaya mengalahkan aturan dasar di atasnya */
+@media (max-width: 520px) {
+  .pojok-tampilan { position: static; display: flex; justify-content: flex-end; padding: 12px 16px 0; }
+  .auth { min-height: auto; padding-top: 12px; }
+}

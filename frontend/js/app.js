@@ -7,9 +7,7 @@ import { halamanPersetujuan } from "./persetujuan.js";
 import { halamanPeminjaman } from "./peminjaman.js";
 import { halamanRuangan } from "./ruangan.js";
 import { t } from "./i18n.js";
-
-// Halaman selain Jadwal dibuat di tahap berikutnya.
-const segera = () => h("div", { class: "kartu kosong" }, t("placeholder.segera"));
+import { kontrolTampilan } from "./tampilan.js";
 
 // publik = boleh dibuka tanpa login, admin = hanya peran admin
 const RUTE = {
@@ -26,7 +24,7 @@ const MENU_UMUM = ["jadwal", "ruangan", "peminjaman"];
 const MENU_ADMIN = ["persetujuan", "kelola"];
 
 const root = document.getElementById("app");
-let infoServer = null; // teks "Server aktif · ..." dimuat sekali
+let server = null; // { nama } kalau aktif, { mati: true } kalau gagal; dimuat sekali. Teksnya dibuat saat digambar supaya ikut bahasa.
 
 function menu(nama, aktif) {
   const r = RUTE[nama];
@@ -35,6 +33,24 @@ function menu(nama, aktif) {
     ikon(r.ikon), t(r.judul));
 }
 
+// Info server di sidebar: titik status + teks (selalu bertulis, warna hanya pelengkap).
+function isiInfoServer(el) {
+  if (!server) return el.replaceChildren();
+  el.replaceChildren(
+    h("span", { class: "titik " + (server.mati ? "titik-mati" : "titik-ok"), "aria-hidden": "true" }),
+    server.mati ? t("server.mati") : t("server.aktif", { nama: server.nama }));
+}
+
+// Gambar ulang halaman (setelah bahasa berganti) tanpa menghilangkan isian formulir yang sedang diketik.
+function gambarUlang() {
+  const form = document.querySelector("form");
+  const isian = form ? [...new FormData(form).entries()] : [];
+  tampil();
+  for (const [nama, nilai] of isian) {
+    const el = document.querySelector(`form [name="${nama}"]`);
+    if (el) el.value = nilai;
+  }
+}
 function layout(aktif, pengguna, query) {
   const keluar = h("button", { class: "menu", type: "button", onclick: () => {
     hapusSesi();
@@ -50,13 +66,18 @@ function layout(aktif, pengguna, query) {
         ...MENU_ADMIN.map((n) => menu(n, aktif)),
       ]),
     h("div", { class: "sisi-bawah" },
+      kontrolTampilan({ gambarUlang }),
       h("div", { class: "profil" },
         h("span", { class: "avatar", "aria-hidden": "true" }, pengguna.nama.charAt(0).toUpperCase()),
         h("div", {},
           h("div", { class: "profil-nama" }, pengguna.nama),
           h("div", { class: "profil-peran" }, t("peran." + pengguna.peran)))),
       keluar,
-      h("p", { class: "info-server", id: "info-server" }, infoServer ?? "")));
+      (() => {
+        const info = h("p", { class: "info-server", id: "info-server" });
+        isiInfoServer(info);
+        return info;
+      })()));
 
   return h("div", { class: "layout" }, sisi,
     h("main", { class: "isi" },
@@ -82,17 +103,20 @@ function tampil() {
     return;
   }
 
-  root.replaceChildren(r.publik ? r.tampil(query) : layout(nama, pengguna, query));
+  // halaman publik (login dkk.) tanpa sidebar: kontrol bahasa dan mode versi kecil di pojok kanan atas
+  root.replaceChildren(...(r.publik
+    ? [h("div", { class: "pojok-tampilan" }, kontrolTampilan({ kecil: true, gambarUlang })), r.tampil(query)]
+    : [layout(nama, pengguna, query)]));
   document.title = `${t(r.judul ?? nama + ".judul")} · ${t("app.nama")}`;
 }
 
 function muatInfoServer() {
   api("/health")
-    .then((d) => (infoServer = t("server.aktif", { nama: d.server })))
-    .catch(() => (infoServer = t("server.mati")))
+    .then((d) => (server = { nama: d.server }))
+    .catch(() => (server = { mati: true }))
     .then(() => {
       const el = document.getElementById("info-server");
-      if (el) el.textContent = infoServer;
+      if (el) isiInfoServer(el);
     });
 }
 
