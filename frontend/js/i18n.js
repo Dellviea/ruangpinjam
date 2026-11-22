@@ -143,6 +143,9 @@ const teks = {
     "ruangan.pinjam": "Pinjam",
     "ruangan.tidakBisaPinjam": "Ruangan sedang dalam perbaikan, tidak bisa dipinjam",
 
+    "form.wajib": "{label} wajib diisi",
+    "form.proses": "Menyimpan...",
+
     "placeholder.segera": "Halaman ini akan segera tersedia.",
 
     "error.umum": "Terjadi kesalahan. Coba lagi.",
