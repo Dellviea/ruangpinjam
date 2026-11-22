@@ -146,6 +146,23 @@ const teks = {
     "form.wajib": "{label} wajib diisi",
     "form.proses": "Menyimpan...",
 
+    "persetujuan.setujui": "Setujui",
+    "persetujuan.tolak": "Tolak",
+    "persetujuan.jumlah": "{n} pengajuan menunggu",
+    "persetujuan.kosong": "Tidak ada pengajuan yang menunggu persetujuan.",
+    "persetujuan.disetujui": "Peminjaman \"{keperluan}\" disetujui.",
+    "persetujuan.ditolak": "Peminjaman \"{keperluan}\" ditolak.",
+    "persetujuan.tolakJudul": "Tolak pengajuan",
+    "persetujuan.alasan": "Alasan penolakan",
+    "persetujuan.alasanHint": "Alasan ini akan terlihat oleh peminjam.",
+    "persetujuan.tolakKirim": "Tolak pengajuan",
+    "persetujuan.kolomPeminjam": "Peminjam",
+    "persetujuan.kolomRuangan": "Ruangan",
+    "persetujuan.kolomWaktu": "Tanggal dan jam",
+    "persetujuan.kolomKegiatan": "Kegiatan",
+    "persetujuan.kolomPeserta": "Peserta / kapasitas",
+    "persetujuan.kolomAksi": "Aksi",
+
     "placeholder.segera": "Halaman ini akan segera tersedia.",
 
     "error.umum": "Terjadi kesalahan. Coba lagi.",

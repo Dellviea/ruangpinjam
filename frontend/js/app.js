@@ -2,6 +2,7 @@ import { api, ambilSesi, hapusSesi } from "./api.js";
 import { halamanLogin, halamanLupaPassword, halamanRegister } from "./auth.js";
 import { h, ikon } from "./dom.js";
 import { halamanJadwal } from "./jadwal.js";
+import { halamanPersetujuan } from "./persetujuan.js";
 import { halamanPeminjaman } from "./peminjaman.js";
 import { halamanRuangan } from "./ruangan.js";
 import { t } from "./i18n.js";
@@ -17,7 +18,7 @@ const RUTE = {
   jadwal: { judul: "nav.jadwal", ikon: "jadwal", tampil: halamanJadwal },
   ruangan: { judul: "nav.ruangan", ikon: "ruangan", tampil: halamanRuangan },
   peminjaman: { judul: "nav.peminjaman", ikon: "peminjaman", tampil: halamanPeminjaman },
-  persetujuan: { judul: "nav.persetujuan", ikon: "persetujuan", admin: true, tampil: segera },
+  persetujuan: { judul: "nav.persetujuan", ikon: "persetujuan", admin: true, tampil: halamanPersetujuan },
   kelola: { judul: "nav.kelola", ikon: "kelola", admin: true, tampil: segera },
 };
 const MENU_UMUM = ["jadwal", "ruangan", "peminjaman"];
