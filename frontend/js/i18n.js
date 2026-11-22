@@ -128,6 +128,21 @@ const teks = {
 
     "konfirmasi.tidak": "Tidak jadi",
 
+    "ruangan.cari": "Cari nama ruangan",
+    "ruangan.filter": "Jenis ruangan",
+    "ruangan.semua": "Semua",
+    "ruangan.jumlah": "{n} ruangan",
+    "ruangan.kosong": "Tidak ada ruangan yang cocok.",
+    "ruangan.status.kosong": "Kosong",
+    "ruangan.status.dipakai": "Sedang dipakai",
+    "ruangan.status.perbaikan": "Dalam perbaikan",
+    "ruangan.lantai": "Lantai {n}",
+    "ruangan.kapasitas": "Kapasitas {n} orang",
+    "ruangan.fasilitas": "Fasilitas",
+    "ruangan.lihatJadwal": "Lihat jadwal",
+    "ruangan.pinjam": "Pinjam",
+    "ruangan.tidakBisaPinjam": "Ruangan sedang dalam perbaikan, tidak bisa dipinjam",
+
     "placeholder.segera": "Halaman ini akan segera tersedia.",
 
     "error.umum": "Terjadi kesalahan. Coba lagi.",
