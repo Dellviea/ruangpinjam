@@ -1,3 +1,5 @@
+import { lokal } from "./i18n.js";
+
 export const pad = (n) => String(n).padStart(2, "0");
 
 // "13:30" -> 810 menit sejak tengah malam
@@ -13,8 +15,8 @@ export function geserHari(tanggal, n) {
 }
 
 export const namaHari = (tanggal) =>
-  new Intl.DateTimeFormat("id-ID", { dateStyle: "full" }).format(new Date(tanggal + "T00:00:00"));
+  new Intl.DateTimeFormat(lokal(), { dateStyle: "full" }).format(new Date(tanggal + "T00:00:00"));
 
 export const tanggalPendek = (tanggal) =>
-  new Intl.DateTimeFormat("id-ID", { weekday: "short", day: "numeric", month: "short", year: "numeric" })
+  new Intl.DateTimeFormat(lokal(), { weekday: "short", day: "numeric", month: "short", year: "numeric" })
     .format(new Date(tanggal + "T00:00:00"));
