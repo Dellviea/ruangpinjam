@@ -22,6 +22,8 @@ const IKON = {
   keluar: '<path d="M10 4H6a1 1 0 0 0-1 1v14a1 1 0 0 0 1 1h4M15 8l4 4-4 4M19 12H9"/>',
   kiri: '<path d="m15 6-6 6 6 6"/>',
   kanan: '<path d="m9 6 6 6-6 6"/>',
+  orang: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0M16 4.5a3.5 3.5 0 0 1 0 7M18.5 14.5a6.5 6.5 0 0 1 3 5.5"/>',
+  cari: '<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>',
   tambah: '<path d="M12 5v14M5 12h14"/>',
 };
 
