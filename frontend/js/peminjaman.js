@@ -83,7 +83,7 @@ export function halamanPeminjaman() {
         tombol("peminjaman.ubah", "tombol-sekunder", ubah),
         tombol("peminjaman.batalkan", "tombol-bahaya", batalkan));
     }
-    if (p.status === "ditolak") return h("div", { class: "aksi-sel" }, tombol("peminjaman.ajukanUlang", "", ajukanUlang));
+    if (p.status === "ditolak") return h("div", { class: "aksi-sel" }, tombol("peminjaman.ajukanUlang", "tombol-sekunder", ajukanUlang));
     return h("span", { class: "sel-sub" }, "—");
   }
 
@@ -92,7 +92,7 @@ export function halamanPeminjaman() {
     return h("tr", {},
       h("td", {}, h("div", { class: "sel-utama" }, p.nama_ruangan)),
       h("td", {}, tanggalPendek(p.tanggal)),
-      h("td", {}, `${p.jam_mulai}–${p.jam_selesai}`),
+      h("td", { class: "mono" }, `${p.jam_mulai}–${p.jam_selesai}`),
       h("td", {},
         h("div", { class: "sel-utama" }, p.keperluan),
         h("div", { class: "sel-sub" }, `${kegiatan(p.jenis_kegiatan)} · ${t("peminjaman.peserta", { n: p.jumlah_peserta })}`)),

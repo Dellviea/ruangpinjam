@@ -1,6 +1,7 @@
 import { api, simpanSesi } from "./api.js";
-import { h, ikon } from "./dom.js";
+import { h, logoDenah } from "./dom.js";
 import { t } from "./i18n.js";
+import { latarAnimasi } from "./latar.js";
 
 function medan(nama, labelKunci, atribut = {}, hint) {
   const id = "f-" + nama;
@@ -13,8 +14,9 @@ function medan(nama, labelKunci, atribut = {}, hint) {
 // Kerangka kartu yang sama untuk login dan register.
 function kartu(judul, sub, form, bawah) {
   return h("div", { class: "auth" },
+    latarAnimasi(),
     h("div", { class: "auth-kartu" },
-      h("div", { class: "auth-merek" }, ikon("gedung"), t("app.nama")),
+      h("div", { class: "auth-merek" }, logoDenah(24), t("app.nama")),
       h("h1", {}, t(judul)),
       h("p", { class: "auth-sub" }, t(sub)),
       form,

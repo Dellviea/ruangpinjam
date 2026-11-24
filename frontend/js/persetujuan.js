@@ -43,14 +43,14 @@ export function halamanPersetujuan() {
 
   function baris(p) {
     const r = ruangan.find((x) => x.id === p.id_ruangan);
-    const tombolSetuju = h("button", { class: "tombol tombol-kecil", type: "button",
+    const tombolSetuju = h("button", { class: "tombol tombol-kecil tombol-lembut", type: "button",
       onclick: () => setujui(p, tombolSetuju) }, t("persetujuan.setujui"));
     return h("tr", {},
       h("td", {}, h("div", { class: "sel-utama" }, p.nama_pengguna)),
       h("td", {}, p.nama_ruangan),
       h("td", { class: "nowrap" },
         h("div", {}, tanggalPendek(p.tanggal)),
-        h("div", { class: "sel-sub" }, `${p.jam_mulai}–${p.jam_selesai}`)),
+        h("div", { class: "sel-sub mono" }, `${p.jam_mulai}–${p.jam_selesai}`)),
       h("td", {},
         h("div", { class: "sel-utama" }, p.keperluan),
         h("div", { class: "sel-sub" }, kegiatan(p.jenis_kegiatan))),

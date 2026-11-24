@@ -29,7 +29,7 @@ export function halamanKelola() {
       jalur: "/ruangan",
       kolom: ["kode", "nama", "gedung", "kapasitas", "jam", "status"],
       sel: (r) => [
-        h("td", {}, r.kode),
+        h("td", { class: "mono" }, r.kode),
         utama(r.nama, jenisRuangan(r.jenis)),
         utama(r.gedung, r.lantai && r.lantai !== "-" ? t("ruangan.lantai", { n: r.lantai }) : null),
         h("td", { class: "nowrap" }, r.kapasitas),
@@ -102,7 +102,7 @@ export function halamanKelola() {
         utama(p.nama_pengguna),
         h("td", {}, p.nama_ruangan),
         h("td", { class: "nowrap" }, h("div", {}, tanggalPendek(p.tanggal)),
-          h("div", { class: "sel-sub" }, `${p.jam_mulai}–${p.jam_selesai}`)),
+          h("div", { class: "sel-sub mono" }, `${p.jam_mulai}–${p.jam_selesai}`)),
         utama(p.keperluan, kegiatan(p.jenis_kegiatan)),
         h("td", { class: "nowrap" }, p.jumlah_peserta),
         h("td", {}, chip("chip-" + p.status, t("status." + p.status))),
