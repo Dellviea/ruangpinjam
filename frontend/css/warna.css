@@ -3,14 +3,14 @@
 :root {
   color-scheme: light;
 
-  --latar: #F2F2F4;
+  --latar: #F6F1F4;
   --panel: #FFFFFF;
-  --garis: #DEDEE3;
-  --garis-halus: #E9E9ED;
+  --garis: #E6DEE3;
+  --garis-halus: #EEE7EB;
 
-  --teks: #141417;
-  --teks-2: #3F3F46;
-  --teks-3: #666670;
+  --teks: #16131A;
+  --teks-2: #463F48;
+  --teks-3: #6E6570;
 
   --aksen: #B04A72;
   --aksen-gelap: #963E60;      /* hover tombol utama dan teks di atas pink lembut */
@@ -30,6 +30,13 @@
   --bahaya-bg: #FBE4E4;
   --bahaya-teks: #9B2C2C;
 
+  /* halaman Jadwal: strip status di blok, titik status ruangan, kotak legenda */
+  --strip-ok: #279152;
+  --strip-tunggu: #A87A00;
+  --titik-dipakai: #3A78B0;
+  --tanda-lain: #7BA0C4;
+  --tanda-tutup: #B7B7C0;
+
   /* tombol berbahaya (tolak/hapus) */
   --merah: #9B2C2C;
   --merah-hover: #7F2222;
@@ -37,21 +44,30 @@
 
   --bayangan: 0 4px 12px rgba(20, 20, 23, .12);
 
-  --radius: 8px;
-  --radius-kecil: 6px;
+  --font-judul: "Plus Jakarta Sans", "Inter", system-ui, sans-serif; /* judul halaman dan angka besar */
+  --font-mono: "JetBrains Mono", ui-monospace, "Cascadia Mono", Consolas, monospace; /* kode ruangan, jam di blok, label kapital */
+
+  /* papan nama pintu (kartu ruangan) dan arsiran (menunggu, perbaikan) */
+  --pita: #2B2530;
+  --pita-teks: #F3EEF1;
+  --arsir: rgba(110, 101, 112, .30);
+  --arsir-blok: rgba(110, 101, 112, .16);
+
+  --radius: 4px;
+  --radius-kecil: 3px;
 }
 
 :root[data-tema="gelap"] {
   color-scheme: dark;
 
-  --latar: #151518;
-  --panel: #1E1E22;
-  --garis: #34343B;
+  --latar: #171316;
+  --panel: #1F1B20;
+  --garis: #3A3238;
   --garis-halus: #2A2A30;
 
-  --teks: #F2F2F4;
-  --teks-2: #C9C9D1;
-  --teks-3: #9A9AA6;
+  --teks: #F3EEF1;
+  --teks-2: #CFC6CC;
+  --teks-3: #A096A0;
 
   --aksen: #E07AA2;
   --aksen-gelap: #F0A5C2;
@@ -69,9 +85,19 @@
   --bahaya-bg: #3B1D1F;
   --bahaya-teks: #F29A9A;
 
+  --strip-ok: #4CC38A;
+  --strip-tunggu: #E8C562;
+  --titik-dipakai: #7FB0E0;
+  --tanda-lain: #4F7CA8;
+  --tanda-tutup: #4A4A52;
+
   --merah: #F28B8B;
   --merah-hover: #F5A3A3;
   --merah-teks: #151518;
 
   --bayangan: 0 4px 14px rgba(0, 0, 0, .5);
+
+  --pita: #2C262D;
+  --arsir: rgba(160, 150, 160, .32);
+  --arsir-blok: rgba(160, 150, 160, .22);
 }
