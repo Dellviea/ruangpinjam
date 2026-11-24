@@ -1,6 +1,7 @@
 import { api, ambilSesi, hapusSesi } from "./api.js";
 import { halamanLogin, halamanLupaPassword, halamanRegister } from "./auth.js";
-import { h, ikon } from "./dom.js";
+import { h, ikon, logoDenah } from "./dom.js";
+import { halamanCari } from "./cari.js";
 import { halamanJadwal } from "./jadwal.js";
 import { halamanKelola } from "./kelola.js";
 import { halamanPersetujuan } from "./persetujuan.js";
@@ -14,13 +15,14 @@ const RUTE = {
   login: { publik: true, tampil: halamanLogin },
   register: { publik: true, tampil: halamanRegister },
   "lupa-password": { publik: true, tampil: halamanLupaPassword },
-  jadwal: { judul: "nav.jadwal", ikon: "jadwal", tampil: halamanJadwal },
+  jadwal: { judul: "nav.jadwal", ikon: "jadwal", kepalaSendiri: true, tampil: halamanJadwal },
+  cari: { judul: "nav.cari", ikon: "cari", baru: true, tampil: halamanCari },
   ruangan: { judul: "nav.ruangan", ikon: "ruangan", tampil: halamanRuangan },
   peminjaman: { judul: "nav.peminjaman", ikon: "peminjaman", tampil: halamanPeminjaman },
   persetujuan: { judul: "nav.persetujuan", ikon: "persetujuan", admin: true, tampil: halamanPersetujuan },
   kelola: { judul: "nav.kelola", ikon: "kelola", admin: true, tampil: halamanKelola },
 };
-const MENU_UMUM = ["jadwal", "ruangan", "peminjaman"];
+const MENU_UMUM = ["jadwal", "cari", "ruangan", "peminjaman"];
 const MENU_ADMIN = ["persetujuan", "kelola"];
 
 const root = document.getElementById("app");
@@ -30,7 +32,7 @@ function menu(nama, aktif) {
   const r = RUTE[nama];
   return h("a", { class: "menu" + (nama === aktif ? " aktif" : ""), href: "#/" + nama,
                   "aria-current": nama === aktif ? "page" : null },
-    ikon(r.ikon), t(r.judul));
+    t(r.judul), r.baru && h("span", { class: "lencana" }, t("nav.baru")));
 }
 
 // Info server di sidebar: titik status + teks (selalu bertulis, warna hanya pelengkap).
@@ -52,37 +54,69 @@ function gambarUlang() {
   }
 }
 function layout(aktif, pengguna, query) {
-  const keluar = h("button", { class: "menu", type: "button", onclick: () => {
-    hapusSesi();
-    location.hash = "#/login";
-  } }, ikon("keluar"), t("nav.keluar"));
+  // avatar + nama di kanan atas: klik membuka menu kecil (nama, peran, Keluar); tutup dengan klik di luar atau Esc
+  const chip = h("button", { class: "profil-chip", type: "button", "aria-haspopup": "menu", "aria-expanded": "false",
+    "aria-label": `${t("nav.akun")}: ${pengguna.nama}`, title: t("nav.akun") },
+    h("span", { class: "avatar", "aria-hidden": "true" }, pengguna.nama.charAt(0).toUpperCase()),
+    h("span", { class: "profil-nama" }, pengguna.nama));
+  const keluarTombol = h("button", { class: "tombol tombol-kecil tombol-sekunder profil-keluar", type: "button", role: "menuitem",
+    onclick: () => {
+      hapusSesi();
+      location.hash = "#/login";
+    } }, ikon("keluar", 15), t("nav.keluar"));
+  const menuProfil = h("div", { class: "profil-menu", role: "menu", "aria-label": t("nav.akun"), hidden: true },
+    h("div", { class: "pm-nama" }, pengguna.nama),
+    h("div", { class: "pm-peran" }, t("peran." + pengguna.peran)),
+    keluarTombol);
+  const keluar = h("div", { class: "profil-wrap" }, chip, menuProfil);
 
-  const sisi = h("aside", { class: "sisi" },
-    h("div", { class: "merek" }, ikon("gedung"), t("app.nama")),
-    h("nav", { "aria-label": t("nav.utama") },
-      ...MENU_UMUM.map((n) => menu(n, aktif)),
-      pengguna.peran === "admin" && [
-        h("div", { class: "bagian" }, t("nav.admin")),
-        ...MENU_ADMIN.map((n) => menu(n, aktif)),
-      ]),
-    h("div", { class: "sisi-bawah" },
-      kontrolTampilan({ gambarUlang }),
-      h("div", { class: "profil" },
-        h("span", { class: "avatar", "aria-hidden": "true" }, pengguna.nama.charAt(0).toUpperCase()),
-        h("div", {},
-          h("div", { class: "profil-nama" }, pengguna.nama),
-          h("div", { class: "profil-peran" }, t("peran." + pengguna.peran)))),
-      keluar,
-      (() => {
-        const info = h("p", { class: "info-server", id: "info-server" });
-        isiInfoServer(info);
-        return info;
-      })()));
+  const bukaMenu = (buka) => {
+    menuProfil.hidden = !buka;
+    chip.setAttribute("aria-expanded", String(buka));
+    if (buka) keluarTombol.focus();
+  };
+  chip.addEventListener("click", () => bukaMenu(menuProfil.hidden));
+  const klikLuar = (e) => {
+    if (!keluar.isConnected) return document.removeEventListener("click", klikLuar);
+    if (!menuProfil.hidden && !keluar.contains(e.target)) bukaMenu(false);
+  };
+  const tekanEsc = (e) => {
+    if (!keluar.isConnected) return document.removeEventListener("keydown", tekanEsc);
+    if (e.key === "Escape" && !menuProfil.hidden) {
+      bukaMenu(false);
+      chip.focus();
+    }
+  };
+  document.addEventListener("click", klikLuar);
+  document.addEventListener("keydown", tekanEsc);
 
-  return h("div", { class: "layout" }, sisi,
+  const tab = h("nav", { class: "tab-menu", "aria-label": t("nav.utama") },
+    ...MENU_UMUM.map((n) => menu(n, aktif)),
+    pengguna.peran === "admin" && [
+      h("span", { class: "tab-pisah", "aria-hidden": "true" }),
+      ...MENU_ADMIN.map((n) => menu(n, aktif)),
+    ]);
+
+  const bar = h("header", { class: "bar-atas" },
+    h("div", { class: "bar-isi" },
+      h("a", { class: "merek", href: "#/jadwal", "aria-label": t("app.nama") }, logoDenah(26), h("span", {}, t("app.nama"))),
+      tab,
+      h("div", { class: "bar-kanan" }, kontrolTampilan({ gambarUlang }), keluar)));
+
+  // tab aktif selalu terlihat saat menu digeser (HP)
+  requestAnimationFrame(() => {
+    const el = tab.querySelector(".aktif");
+    if (el) tab.scrollLeft = el.offsetLeft - (tab.clientWidth - el.offsetWidth) / 2;
+  });
+
+  const info = h("p", { class: "info-server", id: "info-server" });
+  isiInfoServer(info);
+
+  return h("div", { class: "layout" }, bar,
     h("main", { class: "isi" },
-      h("div", { class: "isi-kepala" }, h("h1", {}, t(RUTE[aktif].judul))),
-      RUTE[aktif].tampil(query)));
+      RUTE[aktif].kepalaSendiri ? null : h("div", { class: "isi-kepala" }, h("h1", {}, t(RUTE[aktif].judul))),
+      RUTE[aktif].tampil(query)),
+    h("footer", { class: "kaki" }, info));
 }
 
 function tampil() {
@@ -105,7 +139,7 @@ function tampil() {
 
   // halaman publik (login dkk.) tanpa sidebar: kontrol bahasa dan mode versi kecil di pojok kanan atas
   root.replaceChildren(...(r.publik
-    ? [h("div", { class: "pojok-tampilan" }, kontrolTampilan({ kecil: true, gambarUlang })), r.tampil(query)]
+    ? [h("div", { class: "pojok-tampilan" }, kontrolTampilan({ gambarUlang })), r.tampil(query)]
     : [layout(nama, pengguna, query)]));
   document.title = `${t(r.judul ?? nama + ".judul")} · ${t("app.nama")}`;
 }
