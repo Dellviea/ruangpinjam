@@ -1,6 +1,7 @@
 ﻿import os
 import re
 import socket
+import threading
 from datetime import date, datetime, timedelta
 
 from dotenv import load_dotenv
@@ -418,6 +419,12 @@ def jam_kosong_terdekat(ruang, tanggal, mulai, selesai, abaikan=None):
     return None if terbaik is None else (terbaik, terbaik + durasi)
 
 
+# Data hidup di memori satu proses; beberapa thread gunicorn (--threads) bisa menangani request bersamaan.
+# Kunci ini membuat "cek bentrok lalu simpan" (dan cek status lalu ubah status) menjadi satu langkah tak terpotong,
+# supaya dua pengajuan bersamaan tidak sama-sama lolos untuk slot yang sama.
+kunci_peminjaman = threading.Lock()
+
+
 def cek_peminjaman(data, lama=None):
     h = dict(lama or {})
     h.update({k: v for k, v in data.items() if k in ("id_pengguna", "id_ruangan", "tanggal", "jam_mulai",
@@ -496,13 +503,14 @@ def tambah_peminjaman():
     data = ambil_json()
     if data is None:
         return error("Body harus berupa JSON object")
-    h, pesan, kode = cek_peminjaman(data)
-    if pesan:
-        return error(pesan, kode)
-    h.update(id=max((p["id"] for p in peminjaman), default=0) + 1, status="menunggu", alasan_penolakan="",
-             dibuat_pada=datetime.now().isoformat(timespec="seconds"))
-    peminjaman.append(h)
-    return jsonify(tampil_peminjaman(h)), 201
+    with kunci_peminjaman:
+        h, pesan, kode = cek_peminjaman(data)
+        if pesan:
+            return error(pesan, kode)
+        h.update(id=max((p["id"] for p in peminjaman), default=0) + 1, status="menunggu", alasan_penolakan="",
+                 dibuat_pada=datetime.now().isoformat(timespec="seconds"))
+        peminjaman.append(h)
+        return jsonify(tampil_peminjaman(h)), 201
 
 
 # Cek jadwal untuk pop-up pengajuan: tidak menyimpan apa pun, selalu 200 dengan {aman, pesan}.
@@ -522,59 +530,63 @@ def cek_jadwal():
 # Belum dicek siapa pemiliknya, karena belum ada token/sesi.
 @app.put("/api/peminjaman/<int:id_>")
 def ubah_peminjaman(id_):
-    p = cari(peminjaman, id_)
-    if not p:
-        return error("Peminjaman tidak ditemukan", 404)
     data = ambil_json()
     if data is None:
         return error("Body harus berupa JSON object")
-    if p["status"] != "menunggu":
-        return error("Hanya peminjaman berstatus menunggu yang bisa diubah atau dibatalkan", 409)
-    if data.get("status") == "dibatalkan":  # tombol "Batalkan"
-        p["status"] = "dibatalkan"
+    with kunci_peminjaman:
+        p = cari(peminjaman, id_)
+        if not p:
+            return error("Peminjaman tidak ditemukan", 404)
+        if p["status"] != "menunggu":
+            return error("Hanya peminjaman berstatus menunggu yang bisa diubah atau dibatalkan", 409)
+        if data.get("status") == "dibatalkan":  # tombol "Batalkan"
+            p["status"] = "dibatalkan"
+            return jsonify(tampil_peminjaman(p))
+        h, pesan, kode = cek_peminjaman(data, p)
+        if pesan:
+            return error(pesan, kode)
+        p.update(h)
         return jsonify(tampil_peminjaman(p))
-    h, pesan, kode = cek_peminjaman(data, p)
-    if pesan:
-        return error(pesan, kode)
-    p.update(h)
-    return jsonify(tampil_peminjaman(p))
 
 
 @app.delete("/api/peminjaman/<int:id_>")
 def hapus_peminjaman(id_):
-    p = cari(peminjaman, id_)
-    if not p:
-        return error("Peminjaman tidak ditemukan", 404)
-    peminjaman.remove(p)
-    return jsonify(pesan="Peminjaman dihapus")
+    with kunci_peminjaman:
+        p = cari(peminjaman, id_)
+        if not p:
+            return error("Peminjaman tidak ditemukan", 404)
+        peminjaman.remove(p)
+        return jsonify(pesan="Peminjaman dihapus")
 
 
 @app.put("/api/peminjaman/<int:id_>/setujui")
 def setujui_peminjaman(id_):
-    p = cari(peminjaman, id_)
-    if not p:
-        return error("Peminjaman tidak ditemukan", 404)
-    if p["status"] != "menunggu":
-        return error(f"Hanya peminjaman berstatus menunggu yang bisa disetujui (sekarang: {p['status']})", 409)
-    p["status"], p["alasan_penolakan"] = "disetujui", ""
-    return jsonify(tampil_peminjaman(p))
+    with kunci_peminjaman:
+        p = cari(peminjaman, id_)
+        if not p:
+            return error("Peminjaman tidak ditemukan", 404)
+        if p["status"] != "menunggu":
+            return error(f"Hanya peminjaman berstatus menunggu yang bisa disetujui (sekarang: {p['status']})", 409)
+        p["status"], p["alasan_penolakan"] = "disetujui", ""
+        return jsonify(tampil_peminjaman(p))
 
 
 @app.put("/api/peminjaman/<int:id_>/tolak")
 def tolak_peminjaman(id_):
-    p = cari(peminjaman, id_)
-    if not p:
-        return error("Peminjaman tidak ditemukan", 404)
     data = ambil_json()
     if data is None:
         return error("Body harus berupa JSON object")
-    alasan = data.get("alasan")
-    if not isinstance(alasan, str) or not alasan.strip():
-        return error("Alasan penolakan wajib diisi")
-    if p["status"] != "menunggu":
-        return error(f"Hanya peminjaman berstatus menunggu yang bisa ditolak (sekarang: {p['status']})", 409)
-    p["status"], p["alasan_penolakan"] = "ditolak", alasan.strip()
-    return jsonify(tampil_peminjaman(p))
+    with kunci_peminjaman:
+        p = cari(peminjaman, id_)
+        if not p:
+            return error("Peminjaman tidak ditemukan", 404)
+        alasan = data.get("alasan")
+        if not isinstance(alasan, str) or not alasan.strip():
+            return error("Alasan penolakan wajib diisi")
+        if p["status"] != "menunggu":
+            return error(f"Hanya peminjaman berstatus menunggu yang bisa ditolak (sekarang: {p['status']})", 409)
+        p["status"], p["alasan_penolakan"] = "ditolak", alasan.strip()
+        return jsonify(tampil_peminjaman(p))
 
 
 @app.get("/api/health")
