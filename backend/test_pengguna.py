@@ -12,6 +12,7 @@ assert len(daftar) == 4 and all("password" not in p for p in daftar)  # password
 r = c.post("/api/login", json={"email": "DELLA@email.com", "password": PW})
 assert r.status_code == 200 and r.get_json()["nama"] == "Della" and "password" not in r.get_json()
 assert c.post("/api/login", json={"email": "della@email.com", "password": "salah"}).status_code == 401
+assert c.post("/api/login", json={"email": "della@email.com", "password": "salah"}).get_json()["kode"] == "login_salah"
 assert c.post("/api/login", json={"email": "tidakada@email.com", "password": PW}).status_code == 401
 assert c.post("/api/login", json={"email": "della@email.com"}).status_code == 400
 

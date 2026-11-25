@@ -1,5 +1,5 @@
 import { api, ambilSesi, simpanSesi } from "./api.js";
-import { h, ikon } from "./dom.js";
+import { beriLabelSel, h, ikon } from "./dom.js";
 import { bukaForm } from "./form.js";
 import { jenisRuangan, kegiatan, t } from "./i18n.js";
 import { konfirmasi } from "./konfirmasi.js";
@@ -17,6 +17,11 @@ const pilihan = (daftar, label = (x) => x) => daftar.map((x) => ({ nilai: x, lab
 export function halamanKelola() {
   const saya = ambilSesi();
   const data = { ruangan: [], pengguna: [], peminjaman: [] };
+  // Data yang masih dipakai peminjaman tidak bisa dihapus (backend menolak dengan 409): tombol Hapus dinonaktifkan + alasan.
+  const punyaPeminjaman = (kolom, id) => {
+    const n = data.peminjaman.filter((p) => p[kolom] === id).length;
+    return n ? t("kelola.masihPunya", { n }) : null;
+  };
   const kata = { ruangan: "", pengguna: "", peminjaman: "" };
   let aktif = "ruangan";
 
@@ -40,6 +45,7 @@ export function halamanKelola() {
       cari: (r) => [r.kode, r.nama, r.jenis, jenisRuangan(r.jenis), r.gedung].join(" "),
       urut: (a, b) => JENIS_RUANGAN.indexOf(a.jenis) - JENIS_RUANGAN.indexOf(b.jenis) || a.id - b.id,
       nama: (r) => r.nama,
+      hapusDitolak: (r) => punyaPeminjaman("id_ruangan", r.id),
       awal: () => ({ jam_buka: "07:00", jam_tutup: "21:00", status: "tersedia" }),
       bidang: () => [
         { nama: "kode", label: t("kelola.f.kode"), wajib: true, setengah: true },
@@ -76,7 +82,7 @@ export function halamanKelola() {
       urut: (a, b) => a.id - b.id,
       nama: (p) => p.nama,
       awal: () => ({ peran: "mahasiswa" }),
-      hapusDitolak: (p) => (saya && p.id === saya.id ? t("kelola.hapusDiriSendiri") : null),
+      hapusDitolak: (p) => (saya && p.id === saya.id ? t("kelola.hapusDiriSendiri") : punyaPeminjaman("id_pengguna", p.id)),
       // password tidak pernah dimuat ke form; saat ubah, kosong = tidak diganti
       siapkan: (v) => {
         if (!v.password) delete v.password;
@@ -100,7 +106,7 @@ export function halamanKelola() {
       kolom: ["peminjam", "ruangan", "waktu", "kegiatan", "peserta", "status"],
       sel: (p) => [
         utama(p.nama_pengguna),
-        h("td", {}, p.nama_ruangan),
+        h("td", { class: "nama-r" }, p.nama_ruangan),
         h("td", { class: "nowrap" }, h("div", {}, tanggalPendek(p.tanggal)),
           h("div", { class: "sel-sub mono" }, `${p.jam_mulai}–${p.jam_selesai}`)),
         utama(p.keperluan, kegiatan(p.jenis_kegiatan)),
@@ -175,9 +181,13 @@ export function halamanKelola() {
     const tombol = (kunci, kelas, alasan, fungsi) => h("button", {
       class: "tombol tombol-kecil " + kelas, type: "button", disabled: Boolean(alasan), title: alasan,
       onclick: fungsi }, t(kunci));
+    const ubahAlasan = k.ubahDitolak?.(baris);
+    const hapusAlasan = k.hapusDitolak?.(baris);
+    // alasan tombol nonaktif ditulis terlihat di bawah tombol (bukan hanya tooltip, yang tidak ada di HP)
     return h("td", {}, h("div", { class: "aksi-sel" },
-      tombol("peminjaman.ubah", "tombol-sekunder", k.ubahDitolak?.(baris), () => formData(k, baris)),
-      tombol("kelola.hapus", "tombol-bahaya", k.hapusDitolak?.(baris), () => hapus(k, baris))));
+      tombol("peminjaman.ubah", "tombol-sekunder", ubahAlasan, () => formData(k, baris)),
+      tombol("kelola.hapus", "tombol-bahaya", hapusAlasan, () => hapus(k, baris))),
+    (ubahAlasan || hapusAlasan) && h("div", { class: "alasan-nonaktif" }, hapusAlasan || ubahAlasan));
   }
 
   // ----- tampilan -----
@@ -209,9 +219,9 @@ export function halamanKelola() {
       return;
     }
     wadah.replaceChildren(h("div", { class: "tabel-gulir" },
-      h("table", { class: "tabel tabel-bebas" },
+      beriLabelSel(h("table", { class: "tabel tabel-bebas" },
         h("thead", {}, h("tr", {}, ...[...k.kolom, "aksi"].map((c) => h("th", { scope: "col" }, t("kelola.kolom." + c))))),
-        h("tbody", {}, ...baris.map((r) => h("tr", {}, ...k.sel(r), aksi(k, r)))))));
+        h("tbody", {}, ...baris.map((r) => h("tr", {}, ...k.sel(r), aksi(k, r))))))));
   }
 
   function gambar() {

@@ -26,14 +26,10 @@ export const hariBulan = (tanggal) => {
   return `${hari}, ${bulan}`;
 };
 
-// "Sel, 24 Nov" (tahun hanya ditulis kalau bukan tahun ini)
-export const tanggalRingkas = (tanggal) => {
-  const d = new Date(tanggal + "T00:00:00");
-  const opsi = { weekday: "short", day: "numeric", month: "short" };
-  if (d.getFullYear() !== new Date().getFullYear()) opsi.year = "numeric";
-  return new Intl.DateTimeFormat(lokal(), opsi).format(d);
-};
 
 export const tanggalPendek = (tanggal) =>
   new Intl.DateTimeFormat(lokal(), { weekday: "short", day: "numeric", month: "short", year: "numeric" })
     .format(new Date(tanggal + "T00:00:00"));
+
+// "Sel, 24 Nov 2026": format tanggal pendek yang sama di semua tempat
+export const tanggalRingkas = (tanggal) => tanggalPendek(tanggal);

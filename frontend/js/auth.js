@@ -85,8 +85,23 @@ export function halamanRegister() {
     medan("konfirmasi", "register.konfirmasi", { type: "password", autocomplete: "new-password", required: true }),
     pesan, tombol);
 
+  // Validasi di browser dengan pesan ramah, sebelum dikirim ke server.
+  const tandai = (nama, kunciPesan, isi) => {
+    const el = form.querySelector(`[name="${nama}"]`);
+    el.setAttribute("aria-invalid", "true");
+    el.addEventListener("input", () => el.removeAttribute("aria-invalid"), { once: true });
+    el.focus();
+    throw new Error(t(kunciPesan, isi));
+  };
   kirim(form, pesan, tombol, "register.proses", "register.tombol", (d) => {
-    if (d.get("password") !== d.get("konfirmasi")) throw new Error(t("register.passwordBeda"));
+    form.querySelectorAll("[aria-invalid]").forEach((e) => e.removeAttribute("aria-invalid"));
+    for (const [nama, kunciLabel] of [["nama", "register.nama"], ["nim_nip", "register.nim"], ["email", "register.email"],
+      ["password", "register.password"], ["konfirmasi", "register.konfirmasi"]]) {
+      if (!String(d.get(nama) ?? "").trim()) tandai(nama, "register.wajib", { label: t(kunciLabel) });
+    }
+    if (!/^\S+@\S+\.\S+$/.test(String(d.get("email")).trim())) tandai("email", "register.emailFormat");
+    if (String(d.get("password")).length < 6) tandai("password", "register.passwordPendek");
+    if (d.get("password") !== d.get("konfirmasi")) tandai("konfirmasi", "register.passwordBeda");
     const body = Object.fromEntries(d);
     delete body.konfirmasi;
     return { path: "/register", body, sukses: masuk };

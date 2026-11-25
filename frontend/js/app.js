@@ -6,9 +6,23 @@ import { halamanJadwal } from "./jadwal.js";
 import { halamanKelola } from "./kelola.js";
 import { halamanPersetujuan } from "./persetujuan.js";
 import { halamanPeminjaman } from "./peminjaman.js";
+import { bukaPengajuan } from "./pengajuan.js";
+import { toast } from "./toast.js";
 import { halamanRuangan } from "./ruangan.js";
 import { t } from "./i18n.js";
 import { kontrolTampilan } from "./tampilan.js";
+
+// Tombol utama "Ajukan peminjaman" di kepala halaman Peminjaman Saya: pop-up pengajuan, lalu halaman digambar ulang.
+function tombolAjukan() {
+  return h("button", { class: "tombol tombol-kecil", type: "button",
+    onclick: async () => {
+      try {
+        bukaPengajuan({ ruangan: await api("/ruangan"), onSukses: () => { toast(t("jadwal.terkirim")); tampil(); } });
+      } catch (err) {
+        toast(err.message, "error");
+      }
+    } }, ikon("tambah"), t("jadwal.ajukan"));
+}
 
 // publik = boleh dibuka tanpa login, admin = hanya peran admin
 const RUTE = {
@@ -16,9 +30,9 @@ const RUTE = {
   register: { publik: true, tampil: halamanRegister },
   "lupa-password": { publik: true, tampil: halamanLupaPassword },
   jadwal: { judul: "nav.jadwal", ikon: "jadwal", kepalaSendiri: true, tampil: halamanJadwal },
-  cari: { judul: "nav.cari", ikon: "cari", baru: true, tampil: halamanCari },
+  cari: { judul: "nav.cari", ikon: "cari", tampil: halamanCari },
   ruangan: { judul: "nav.ruangan", ikon: "ruangan", tampil: halamanRuangan },
-  peminjaman: { judul: "nav.peminjaman", ikon: "peminjaman", tampil: halamanPeminjaman },
+  peminjaman: { judul: "nav.peminjaman", ikon: "peminjaman", aksiKepala: tombolAjukan, tampil: halamanPeminjaman },
   persetujuan: { judul: "nav.persetujuan", ikon: "persetujuan", admin: true, tampil: halamanPersetujuan },
   kelola: { judul: "nav.kelola", ikon: "kelola", admin: true, tampil: halamanKelola },
 };
@@ -32,7 +46,7 @@ function menu(nama, aktif) {
   const r = RUTE[nama];
   return h("a", { class: "menu" + (nama === aktif ? " aktif" : ""), href: "#/" + nama,
                   "aria-current": nama === aktif ? "page" : null },
-    t(r.judul), r.baru && h("span", { class: "lencana" }, t("nav.baru")));
+    t(r.judul));
 }
 
 // Info server di sidebar: titik status + teks (selalu bertulis, warna hanya pelengkap).
@@ -99,7 +113,7 @@ function layout(aktif, pengguna, query) {
 
   const bar = h("header", { class: "bar-atas" },
     h("div", { class: "bar-isi" },
-      h("a", { class: "merek", href: "#/jadwal", "aria-label": t("app.nama") }, logoDenah(26), h("span", {}, t("app.nama"))),
+      h("a", { class: "merek", href: "#/jadwal", "aria-label": t("app.nama") }, logoDenah(28), h("span", {}, t("app.nama"))),
       tab,
       h("div", { class: "bar-kanan" }, kontrolTampilan({ gambarUlang }), keluar)));
 
@@ -114,7 +128,7 @@ function layout(aktif, pengguna, query) {
 
   return h("div", { class: "layout" }, bar,
     h("main", { class: "isi" },
-      RUTE[aktif].kepalaSendiri ? null : h("div", { class: "isi-kepala" }, h("h1", {}, t(RUTE[aktif].judul))),
+      RUTE[aktif].kepalaSendiri ? null : h("div", { class: "isi-kepala" }, h("h1", {}, t(RUTE[aktif].judul)), RUTE[aktif].aksiKepala?.()),
       RUTE[aktif].tampil(query)),
     h("footer", { class: "kaki" }, info));
 }

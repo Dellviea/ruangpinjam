@@ -1,6 +1,7 @@
 import { api, ambilSesi } from "./api.js";
 import { h } from "./dom.js";
-import { jenisRuangan, kegiatan, t } from "./i18n.js";
+import { jenisRuangan, kegiatan, pesanGalat, t } from "./i18n.js";
+import { tanggalLokal } from "./waktu.js";
 import { JENIS_KEGIATAN, JENIS_RUANGAN } from "./konstanta.js";
 
 const kolom = (id, labelKunci, kontrol, hint) =>
@@ -42,7 +43,7 @@ export function bukaPengajuan({ ruangan, awal = {}, onSukses, idUbah = null }) {
     kolom("p-ruangan", "pengajuan.ruangan", pilihRuangan, hintKapasitas),
     kolom("p-kegiatan", "pengajuan.jenisKegiatan", pilihKegiatan),
     kolom("p-tanggal", "pengajuan.tanggal",
-      h("input", { id: "p-tanggal", name: "tanggal", type: "date", value: awal.tanggal ?? "" })),
+      h("input", { id: "p-tanggal", name: "tanggal", type: "date", min: tanggalLokal(), value: awal.tanggal ?? "" })),
     h("div", { class: "baris-2" },
       kolom("p-mulai", "pengajuan.mulai",
         h("input", { id: "p-mulai", name: "jam_mulai", type: "time", value: awal.jam_mulai ?? "" })),
@@ -53,6 +54,7 @@ export function bukaPengajuan({ ruangan, awal = {}, onSukses, idUbah = null }) {
       h("input", { id: "p-peserta", name: "jumlah_peserta", type: "number", min: 1, inputmode: "numeric",
         value: awal.jumlah_peserta ?? "" })),
     cek, galat,
+    !idUbah && h("p", { class: "hint catatan-ajukan" }, t("pengajuan.catatan")),
     h("div", { class: "aksi" }, batal, kirim));
 
   const dialog = h("dialog", { class: "dialog", "aria-labelledby": "dlg-judul" }, form);
@@ -108,7 +110,7 @@ export function bukaPengajuan({ ruangan, awal = {}, onSukses, idUbah = null }) {
         if (saya !== urutan) return; // sudah ada pengecekan yang lebih baru
         aman = hasil.aman;
         if (aman) tampilCek("aman", t("pengajuan.labelAman"), t("pengajuan.cekAman"));
-        else tampilCek("bentrok", t("pengajuan.labelTidak"), hasil.pesan);
+        else tampilCek("bentrok", t("pengajuan.labelTidak"), pesanGalat(hasil.kode, hasil.data, hasil.pesan));
       } catch (err) {
         if (saya !== urutan) return;
         aman = null;

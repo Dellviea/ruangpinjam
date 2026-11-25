@@ -1,4 +1,4 @@
-import { t } from "./i18n.js";
+import { pesanGalat, t } from "./i18n.js";
 
 // Semua panggilan ke backend lewat sini. Path relatif, jadi jalan di localhost maupun di VM.
 export async function api(path, { method = "GET", body } = {}) {
@@ -13,7 +13,11 @@ export async function api(path, { method = "GET", body } = {}) {
     throw new Error(t("error.server"));
   }
   const data = await res.json().catch(() => null);
-  if (!res.ok) throw new Error(data?.error || t("error.umum"));
+  if (!res.ok) {
+    const err = new Error(pesanGalat(data?.kode, data?.data, data?.error) || t("error.umum"));
+    err.kode = data?.kode;
+    throw err;
+  }
   return data;
 }
 

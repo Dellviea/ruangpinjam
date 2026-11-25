@@ -26,7 +26,7 @@
   --ok-bg: #E3F2E8;
   --ok-teks: #1E6B3A;
   --tunggu-bg: #FBF1D6;
-  --tunggu-teks: #7A5A00;
+  --tunggu-teks: #6B4A00;
   --bahaya-bg: #FBE4E4;
   --bahaya-teks: #9B2C2C;
 
@@ -48,10 +48,11 @@
   --font-mono: "JetBrains Mono", ui-monospace, "Cascadia Mono", Consolas, monospace; /* kode ruangan, jam di blok, label kapital */
 
   /* papan nama pintu (kartu ruangan) dan arsiran (menunggu, perbaikan) */
-  --pita: #2B2530;
+  --pita: #2E2830;
   --pita-teks: #F3EEF1;
   --arsir: rgba(110, 101, 112, .30);
   --arsir-blok: rgba(110, 101, 112, .16);
+  --lewat: rgba(110, 101, 112, .09); /* slot Jadwal yang waktunya sudah lewat */
 
   --radius: 4px;
   --radius-kecil: 3px;
@@ -97,7 +98,26 @@
 
   --bayangan: 0 4px 14px rgba(0, 0, 0, .5);
 
-  --pita: #2C262D;
+  --pita: #2A2228;
   --arsir: rgba(160, 150, 160, .32);
   --arsir-blok: rgba(160, 150, 160, .22);
+  --lewat: rgba(160, 150, 160, .10);
+}
+
+/* Skala tipografi tetap: semua ukuran teks aplikasi dirujuk dari sini. Ubah di sini saja. */
+:root {
+  --fs-tgl: 64px;        --fw-tgl: 800;      /* angka tanggal besar: Plus Jakarta Sans */
+  --fs-judul: 28px;      --fw-judul: 700;    /* judul halaman dan angka ringkasan: Plus Jakarta Sans */
+  --fs-kalimat: 22px;    --fw-kalimat: 600;  /* kalimat isian Cari Ruangan Kosong: Plus Jakarta Sans */
+  --fs-kartu: 18px;      --fw-kartu: 700;    /* judul kartu dan judul pop-up: Plus Jakarta Sans */
+  --fs-sub: 15px;        --fw-sub: 600;      /* nama ruangan di tabel, subjudul: Inter */
+  --fs-isi: 14px;        --fw-isi: 400;      /* teks isi: Inter, line-height 1.5 */
+  --fs-tombol: 14px;     --fw-tombol: 500;   /* tombol, tab, menu: Inter (tombol utama 600) */
+  --fw-tombol-utama: 600;
+  --fs-kecil: 12.5px;    --fw-kecil: 400;    /* keterangan dan detail kecil: Inter, warna teks sekunder */
+  --fs-label: 11.5px;    --fw-label: 600;    /* label kapital dan kode ruangan: JetBrains Mono */
+  --ls-label: .06em;
+}
+@media (max-width: 760px) {
+  :root { --fs-judul: 24px; --fs-tgl: 48px; }
 }

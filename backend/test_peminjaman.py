@@ -106,4 +106,45 @@ assert c.delete("/api/pengguna/2").status_code == 409
 assert c.delete(f"/api/peminjaman/{a}").status_code == 200
 assert c.get(f"/api/peminjaman/{a}").status_code == 404
 assert c.get("/api/health").get_json()["jumlah_data"]["peminjaman"] > 20
+# kode galat untuk terjemahan di frontend (pesan Indonesia tetap ada di "error")
+assert kirim().status_code == 201  # 14:00-16:00 sebagai dasar bentrok
+r = kirim(jam_mulai="15:00", jam_selesai="17:00")
+g = r.get_json()
+assert g["kode"] == "bentrok" and g["data"]["kegiatan"] and g["data"]["mulai"] and g["data"]["selesai"] and "lainnya" in g["data"]
+r = kirim(jumlah_peserta=999)
+assert r.get_json()["kode"] == "kapasitas" and r.get_json()["data"]["kapasitas"] == 45 and r.get_json()["data"]["peserta"] == 999
+r = kirim(jam_mulai="06:00", jam_selesai="08:00")
+assert r.get_json()["kode"] == "jam_buka" and r.get_json()["data"]["buka"] == "07:00"
+futsal = next(x for x in c.get("/api/ruangan").get_json() if x["status"] != "tersedia")["id"]
+assert kirim(id_ruangan=futsal, jumlah_peserta=5).get_json()["kode"] == "perbaikan"
+cek_b = c.post("/api/peminjaman/cek", json={**b, "jam_mulai": "15:00", "jam_selesai": "17:00"}).get_json()
+assert cek_b["aman"] is False and cek_b["kode"] == "bentrok"
+assert "kode" not in c.post("/api/peminjaman/cek", json=cek).get_json() or c.post("/api/peminjaman/cek", json=cek).get_json()["aman"] is False
+
+# tanggal/jam yang sudah lewat ditolak (POST, PUT, dan endpoint cek)
+from datetime import date, datetime, timedelta
+kini = datetime.now()
+hari_ini = date.today().isoformat()
+kemarin = (date.today() - timedelta(days=1)).isoformat()
+r = kirim(tanggal=kemarin)
+assert r.status_code == 400 and r.get_json()["kode"] == "lampau_tanggal" and "sudah lewat" in r.get_json()["error"]
+c_lewat = c.post("/api/peminjaman/cek", json={**b, "tanggal": kemarin}).get_json()
+assert c_lewat["aman"] is False and c_lewat["kode"] == "lampau_tanggal"
+if kini.hour * 60 + kini.minute > 8 * 60:  # jam 07:00 hari ini sudah lewat (hanya bisa diuji kalau sekarang lewat 08:00)
+    r = kirim(tanggal=hari_ini, jam_mulai="07:00", jam_selesai="07:30")
+    assert r.status_code == 400 and r.get_json()["kode"] == "lampau_jam"
+    assert c.post("/api/peminjaman/cek", json={**b, "tanggal": hari_ini, "jam_mulai": "07:00", "jam_selesai": "07:30"}).get_json()["kode"] == "lampau_jam"
+if kini.hour < 19:  # jam depan hari ini tidak boleh ditolak karena "lewat" (hasil lain, mis. bentrok, boleh)
+    depan = f"{kini.hour + 1:02d}:00"
+    selesai_depan = f"{kini.hour + 1:02d}:30"
+    r = kirim(tanggal=hari_ini, jam_mulai=depan, jam_selesai=selesai_depan, id_ruangan=4, jumlah_peserta=5)
+    assert r.get_json().get("kode") not in ("lampau_jam", "lampau_tanggal"), r.get_json()
+# data contoh tetap valid: peminjaman hari ini yang jamnya sudah lewat tetap bisa dilihat, diganti keperluannya, dan diproses admin
+semua = c.get("/api/peminjaman").get_json()
+menunggu_hari_ini = next(p for p in semua if p["tanggal"] == hari_ini and p["status"] == "menunggu")
+r = c.put(f"/api/peminjaman/{menunggu_hari_ini['id']}", json={"keperluan": "Keperluan diganti"})
+assert r.status_code == 200 and r.get_json()["keperluan"] == "Keperluan diganti"
+r = c.put(f"/api/peminjaman/{menunggu_hari_ini['id']}", json={"tanggal": kemarin})
+assert r.status_code == 400 and r.get_json()["kode"] == "lampau_tanggal"
+assert c.put(f"/api/peminjaman/{menunggu_hari_ini['id']}/setujui").status_code == 200
 print("semua cek lolos")

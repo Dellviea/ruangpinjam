@@ -1,5 +1,5 @@
 import { api } from "./api.js";
-import { h } from "./dom.js";
+import { h, ikon } from "./dom.js";
 import { jenisRuangan, t } from "./i18n.js";
 import { tampilanGagal, tampilanKosong } from "./kosong.js";
 import { bukaPengajuan } from "./pengajuan.js";
@@ -26,24 +26,26 @@ function isianAwal() {
 export function halamanCari() {
   let ruangan = [];
   let peminjaman = [];
+  let tampilTidak = false; // bagian "tidak tersedia" dilipat sampai dibuka
   let animasiMasuk = true; // hasil muncul berurutan hanya pada tampilan pertama, bukan tiap ketikan
 
   const awal = isianAwal();
-  // Kolom isian di dalam kalimat: garis bawah pink, hasil langsung diperbarui saat berubah.
-  const peserta = h("input", { class: "isian-inline ii-angka", type: "number", min: "1", max: "999", value: "20",
+  // Isian di dalam kalimat: kotak pink lembut, garis bawah aksen, tanda ▾; hasil langsung diperbarui saat berubah.
+  const peserta = h("input", { class: "isian-kontrol ii-angka", type: "number", min: "1", max: "999", value: "20",
     "aria-label": t("cari.aria.peserta"), oninput: gambar, onchange: gambar });
   const pilihJam = (nilai, label) => {
-    const el = h("select", { class: "isian-inline ii-jam", "aria-label": label, oninput: gambar, onchange: gambar },
+    const el = h("select", { class: "isian-kontrol ii-jam", "aria-label": label, oninput: gambar, onchange: gambar },
       ...PILIHAN_JAM.map((j) => h("option", { value: j }, j)));
     el.value = nilai;
     return el;
   };
   const mulai = pilihJam(awal.mulai, t("cari.aria.mulai"));
   const selesai = pilihJam(awal.selesai, t("cari.aria.selesai"));
+  const bungkus = (el) => h("span", { class: "isian-inline" }, el);
   // Tanggal tampil sebagai teks pendek; input tanggal asli transparan di atasnya dan membuka pemilih saat diklik.
   const bukaPemilih = (e) => { try { e.target.showPicker(); } catch { /* browser lama: input biasa */ } };
   const teksTanggal = h("span", { "aria-hidden": "true" }, tanggalRingkas(awal.tanggal));
-  const tanggal = h("input", { class: "ii-tanggal-input", type: "date", value: awal.tanggal, "aria-label": t("cari.aria.tanggal"),
+  const tanggal = h("input", { class: "ii-tanggal-input", type: "date", min: tanggalLokal(), value: awal.tanggal, "aria-label": t("cari.aria.tanggal"),
     onclick: bukaPemilih, onkeydown: (e) => e.key === "Enter" && bukaPemilih(e),
     oninput: ubahTanggal, onchange: ubahTanggal });
   const kolomTanggal = h("label", { class: "isian-inline ii-tanggal" }, teksTanggal, tanggal);
@@ -54,14 +56,34 @@ export function halamanCari() {
 
   const hasil = h("div", { "aria-live": "polite", "aria-label": t("cari.hasil") }, h("div", { class: "kosong" }, t("jadwal.memuat")));
 
-  // Alasan ruangan tidak tersedia, atau null kalau bisa dipinjam. Aturannya sama dengan backend.
+  const jamStr = (m) => `${pad(Math.floor(m / 60))}:${pad(m % 60)}`;
+  const bentrokDengan = (r, tgl, m1, m2) => peminjaman.find((p) => p.id_ruangan === r.id && p.tanggal === tgl && AKTIF.includes(p.status)
+    && m1 < menit(p.jam_selesai) && m2 > menit(p.jam_mulai));
+
+  // Jam mulai terdekat (per 30 menit, dengan durasi yang sama) yang kosong di ruangan itu; null kalau tidak ada.
+  function jamKosongTerdekat(r, tgl, m1, m2) {
+    const dur = m2 - m1;
+    const kini = new Date();
+    const dariMenit = tgl === tanggalLokal(kini) ? kini.getHours() * 60 + kini.getMinutes() : 0; // jam yang sudah lewat tidak disarankan
+    let terbaik = null;
+    for (let m = menit(r.jam_buka); m + dur <= menit(r.jam_tutup); m += 30) {
+      if (m % 30 || m < dariMenit || bentrokDengan(r, tgl, m, m + dur)) continue;
+      if (terbaik === null || Math.abs(m - m1) < Math.abs(terbaik - m1)) terbaik = m;
+    }
+    return terbaik;
+  }
+
+  // Alasan ruangan tidak tersedia ({ikon, teks, saran}), atau null kalau bisa diajukan. Aturannya sama dengan backend.
   function alasan(r, n, tgl, m1, m2) {
-    if (r.status !== "tersedia") return t("cari.alasan.perbaikan");
-    if (m1 < menit(r.jam_buka) || m2 > menit(r.jam_tutup)) return t("cari.alasan.jam", { buka: r.jam_buka, tutup: r.jam_tutup });
-    if (n > r.kapasitas) return t("cari.alasan.kapasitas", { kap: r.kapasitas, n });
-    const bentrok = peminjaman.find((p) => p.id_ruangan === r.id && p.tanggal === tgl && AKTIF.includes(p.status)
-      && m1 < menit(p.jam_selesai) && m2 > menit(p.jam_mulai));
-    if (bentrok) return t("cari.alasan.bentrok", { kegiatan: bentrok.keperluan, mulai: bentrok.jam_mulai, selesai: bentrok.jam_selesai });
+    if (r.status !== "tersedia") return { ikon: "kunci", teks: t("cari.alasan.perbaikan") };
+    if (m1 < menit(r.jam_buka) || m2 > menit(r.jam_tutup)) return { ikon: "jam", teks: t("cari.alasan.jam", { buka: r.jam_buka, tutup: r.jam_tutup }) };
+    if (n > r.kapasitas) return { ikon: "orang", teks: t("cari.alasan.kapasitas", { kap: r.kapasitas, n }) };
+    const bentrok = bentrokDengan(r, tgl, m1, m2);
+    if (bentrok) {
+      const saran = jamKosongTerdekat(r, tgl, m1, m2);
+      return { ikon: "jam", teks: t("cari.alasan.bentrok", { kegiatan: bentrok.keperluan, mulai: bentrok.jam_mulai, selesai: bentrok.jam_selesai }),
+        saran: saran === null ? null : { mulai: jamStr(saran), selesai: jamStr(saran + (m2 - m1)) } };
+    }
     return null;
   }
 
@@ -89,27 +111,39 @@ export function halamanCari() {
       h("h2", { class: "kr-nama" }, r.nama),
       h("p", { class: "kr-info" }, lokasi(r)),
       h("p", { class: "cr-kap" }, t("ruangan.kapasitas", { n: r.kapasitas }),
-        // kartu yang sudah berlabel "Disarankan" tidak perlu label "Pas" lagi
-        !(pas && ukuran === "pas") && h("span", { class: "chip cr-ukuran cr-ukuran-" + ukuran }, t("cari.ukuran." + ukuran))),
+        // hanya "Agak besar" dan "Terlalu besar" yang diberi label; ukuran pas tidak perlu label
+        ukuran !== "pas" && h("span", { class: "chip cr-ukuran cr-ukuran-" + ukuran }, t("cari.ukuran." + ukuran))),
       h("div", { class: "kr-aksi" },
-        h("button", { class: "tombol tombol-kecil tombol-lembut", type: "button", onclick: () => ajukan(r, n) },
+        // hanya kartu "Disarankan" yang tombolnya pink penuh; yang lain bergaris
+        h("button", { class: "tombol tombol-kecil" + (pas ? "" : " tombol-garis"), type: "button", onclick: () => ajukan(r, n) },
           t("cari.ajukan", { mulai: mulai.value, selesai: selesai.value }))));
   }
 
-  function kartuTidak(r, teks, i) {
+  // Kartu diredupkan (latar --latar, tanpa bayangan/hover); alasan berwarna teks sekunder dengan ikon garis.
+  function kartuTidak(r, a, i) {
     return h("article", { class: "cr-kartu tidak", style: `--i:${Math.min(i, 12)}` },
       h("div", { class: "kr-atas" }, h("span", { class: "tag-jenis" }, jenisRuangan(r.jenis))),
       h("h2", { class: "kr-nama" }, r.nama),
       h("p", { class: "kr-info" }, lokasi(r)),
-      h("p", { class: "cr-alasan" }, teks));
+      h("div", { class: "cr-alasan" }, ikon(a.ikon, 16),
+        h("div", {}, h("div", {}, a.teks),
+          a.saran && h("button", { class: "tautan-kecil", type: "button",
+            onclick: () => {
+              mulai.value = a.saran.mulai;
+              selesai.value = a.saran.selesai;
+              gambar();
+            } }, t("cari.saran", { jam: a.saran.mulai })))));
   }
 
   function gambar() {
     const n = Number(peserta.value);
     const m1 = mulai.value ? menit(mulai.value) : NaN;
     const m2 = selesai.value ? menit(selesai.value) : NaN;
+    const kini = new Date();
+    const lampau = tanggal.value && (tanggal.value < tanggalLokal(kini)
+      || (tanggal.value === tanggalLokal(kini) && m1 < kini.getHours() * 60 + kini.getMinutes()));
     const petunjuk = !(n >= 1) ? "cari.petunjuk.peserta" : !tanggal.value ? "cari.petunjuk.tanggal"
-      : !(m2 > m1) ? "cari.petunjuk.jam" : null;
+      : !(m2 > m1) ? "cari.petunjuk.jam" : lampau ? "cari.petunjuk.lampau" : null;
     if (petunjuk) return hasil.replaceChildren(h("p", { class: "cr-petunjuk" }, t(petunjuk)));
 
     const cocok = [];
@@ -129,8 +163,10 @@ export function halamanCari() {
           h("div", { class: kelas }, ...cocok.map((r, i) => kartuCocok(r, n, i, i === 0))))
         : tampilanKosong({ gambar: "cari", judul: t("cari.kosongJudul"), teks: t("cari.kosong") }),
       tidak.length > 0 && h("section", {},
-        h("h2", { class: "cr-judul" }, t("cari.tidakTersedia", { n: tidak.length })),
-        h("div", { class: kelas }, ...tidak.map(([r, a], i) => kartuTidak(r, a, i + cocok.length)))));
+        h("h2", { class: "cr-judul" }, h("button", { class: "tautan-lipat", type: "button", "aria-expanded": String(tampilTidak),
+          "aria-controls": "cr-tidak", onclick: () => { tampilTidak = !tampilTidak; gambar(); } },
+        tampilTidak ? t("cari.sembunyikan") : t("cari.tampilTidak", { n: tidak.length }))),
+        h("div", { class: "cr-grid", id: "cr-tidak", hidden: !tampilTidak }, ...tidak.map(([r, a], i) => kartuTidak(r, a, i + cocok.length)))));
     animasiMasuk = false;
   }
 
@@ -144,10 +180,22 @@ export function halamanCari() {
     }
   }
 
+  // Tombol Cari: menjalankan ulang pencarian lalu menggulir ke hasil (hasil sudah otomatis diperbarui saat isian berubah).
+  function cariUlang() {
+    gambar();
+    const pelan = !matchMedia("(prefers-reduced-motion: reduce)").matches;
+    hasil.scrollIntoView({ behavior: pelan ? "smooth" : "auto", block: "start" });
+  }
+
   muat();
   return h("div", {},
-    h("p", { class: "cari-kalimat" },
-      t("cari.k1"), " ", peserta, " ", t("cari.k2"), " ", kolomTanggal, " ", t("cari.k3"), " ", mulai, " ", t("cari.k4"), " ",
-      h("span", { class: "tak-pisah" }, selesai, ".")), // isian terakhir dan titiknya tidak boleh terpisah baris
+    h("p", { class: "cari-sub" }, t("cari.sub")),
+    h("div", { class: "cari-panel" },
+      h("div", { class: "cari-isi" },
+        h("p", { class: "cari-kalimat" },
+          t("cari.k1"), " ", bungkus(peserta), " ", t("cari.k2"), " ", kolomTanggal, " ", t("cari.k3"), " ", bungkus(mulai), " ", t("cari.k4"), " ",
+          h("span", { class: "tak-pisah" }, bungkus(selesai), ".")), // isian terakhir dan titiknya tidak boleh terpisah baris
+        h("p", { class: "cari-bantu" }, t("cari.bantu"))),
+      h("button", { class: "tombol cari-tombol", type: "button", onclick: cariUlang }, ikon("cari", 16), t("cari.tombol"))),
     hasil);
 }

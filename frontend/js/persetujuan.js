@@ -1,5 +1,5 @@
 import { api } from "./api.js";
-import { h } from "./dom.js";
+import { beriLabelSel, h } from "./dom.js";
 import { bukaForm } from "./form.js";
 import { kegiatan, t } from "./i18n.js";
 import { tampilanGagal, tampilanKosong } from "./kosong.js";
@@ -47,14 +47,14 @@ export function halamanPersetujuan() {
       onclick: () => setujui(p, tombolSetuju) }, t("persetujuan.setujui"));
     return h("tr", {},
       h("td", {}, h("div", { class: "sel-utama" }, p.nama_pengguna)),
-      h("td", {}, p.nama_ruangan),
+      h("td", { class: "nama-r" }, p.nama_ruangan),
       h("td", { class: "nowrap" },
         h("div", {}, tanggalPendek(p.tanggal)),
         h("div", { class: "sel-sub mono" }, `${p.jam_mulai}–${p.jam_selesai}`)),
       h("td", {},
         h("div", { class: "sel-utama" }, p.keperluan),
         h("div", { class: "sel-sub" }, kegiatan(p.jenis_kegiatan))),
-      h("td", { class: "nowrap" }, `${p.jumlah_peserta} / ${r ? r.kapasitas : "?"}`),
+      h("td", {}, t("persetujuan.pesertaDari", { n: p.jumlah_peserta, kap: r ? r.kapasitas : "?" })),
       h("td", {}, h("div", { class: "aksi-sel" }, tombolSetuju,
         h("button", { class: "tombol tombol-kecil tombol-bahaya", type: "button", onclick: () => tolak(p) },
           t("persetujuan.tolak")))));
@@ -69,9 +69,9 @@ export function halamanPersetujuan() {
     }
     const kolom = ["Peminjam", "Ruangan", "Waktu", "Kegiatan", "Peserta", "Aksi"];
     panel.replaceChildren(h("div", { class: "tabel-gulir" },
-      h("table", { class: "tabel tabel-bebas" },
+      beriLabelSel(h("table", { class: "tabel tabel-bebas" },
         h("thead", {}, h("tr", {}, ...kolom.map((k) => h("th", { scope: "col" }, t("persetujuan.kolom" + k))))),
-        h("tbody", {}, ...menunggu.map(baris)))));
+        h("tbody", {}, ...menunggu.map(baris))))));
   }
 
   async function muat() {

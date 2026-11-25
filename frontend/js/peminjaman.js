@@ -1,5 +1,5 @@
 import { api, ambilSesi } from "./api.js";
-import { h } from "./dom.js";
+import { beriLabelSel, h } from "./dom.js";
 import { kegiatan, t } from "./i18n.js";
 import { konfirmasi } from "./konfirmasi.js";
 import { tampilanGagal, tampilanKosong } from "./kosong.js";
@@ -61,7 +61,7 @@ export function halamanPeminjaman() {
     const ya = await konfirmasi({
       judul: t("peminjaman.konfirmasiJudul"),
       teks: t("peminjaman.konfirmasiTeks", { ruangan: p.nama_ruangan, tanggal: tanggalPendek(p.tanggal),
-        jam: `${p.jam_mulai}-${p.jam_selesai}` }),
+        jam: `${p.jam_mulai}–${p.jam_selesai}` }),
       ya: t("peminjaman.konfirmasiYa"),
       bahaya: true,
     });
@@ -84,6 +84,7 @@ export function halamanPeminjaman() {
         tombol("peminjaman.batalkan", "tombol-bahaya", batalkan));
     }
     if (p.status === "ditolak") return h("div", { class: "aksi-sel" }, tombol("peminjaman.ajukanUlang", "tombol-sekunder", ajukanUlang));
+    if (p.status === "disetujui") return h("span", { class: "sel-sub" }, t("peminjaman.hubungiAdmin"));
     return h("span", { class: "sel-sub" }, "—");
   }
 
@@ -122,9 +123,9 @@ export function halamanPeminjaman() {
     }
     const kolom = ["Ruangan", "Tanggal", "Jam", "Kegiatan", "Status", "Aksi"];
     panel.replaceChildren(h("div", { class: "tabel-gulir" },
-      h("table", { class: "tabel" },
+      beriLabelSel(h("table", { class: "tabel" },
         h("thead", {}, h("tr", {}, ...kolom.map((k) => h("th", { scope: "col" }, t("peminjaman.kolom" + k))))),
-        h("tbody", {}, ...daftar.map(baris)))));
+        h("tbody", {}, ...daftar.map(baris))))));
   }
 
   async function muat() {

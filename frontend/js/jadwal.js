@@ -94,10 +94,12 @@ export function halamanJadwal(query = new URLSearchParams()) {
     return h("div", {
       class: `j-blok ${milik ? "milik" : "lain"} s-${p.status}`, // strip kiri = pemilik (pink / biru); menunggu = arsiran
       style: `left:calc(${kiri}% + 2px);width:calc(${lebar}% - 4px);--i:${Math.min(urutanBlok++, 24)}`,
-      title: `${p.jam_mulai}-${p.jam_selesai} · ${p.keperluan} · ${p.nama_pengguna} · ${t("status." + p.status)}`,
+      title: `${p.jam_mulai}–${p.jam_selesai} · ${p.keperluan} · ${p.nama_pengguna} · ${t("status." + p.status)}`,
     },
-      h("div", { class: "j-perlu" }, p.keperluan),
-      h("div", { class: "j-detail" }, `${p.jam_mulai}-${p.jam_selesai} · ${milik ? t("jadwal.milikSaya") : p.nama_pengguna}`),
+      // teks menempel di tepi kiri area yang terlihat (sticky), jadi tidak tertutup kolom ruangan saat tabel digeser
+      h("div", { class: "j-blok-isi" },
+        h("div", { class: "j-perlu" }, p.keperluan),
+        h("div", { class: "j-detail" }, `${p.jam_mulai}–${p.jam_selesai} · ${milik ? t("jadwal.milikSaya") : p.nama_pengguna}`)),
       h("span", { class: "sr-only" }, t("status." + p.status))); // status untuk pembaca layar; visualnya: menunggu = arsiran
   }
 
@@ -108,8 +110,10 @@ export function halamanJadwal(query = new URLSearchParams()) {
     const slot = [];
     for (let j = JAM_AWAL; j < JAM_AKHIR; j++) {
       const bisa = tersedia && j * 60 >= buka && (j + 1) * 60 <= tutup;
-      slot.push(h("div", { class: "j-slot" + (bisa ? "" : " j-tutup"),
-        "data-jam": bisa ? j : null, "data-label": bisa ? `+ ${pad(j)}:00` : null })); // label muncul saat disorot
+      const el = h("div", { class: "j-slot" + (bisa ? "" : " j-tutup"),
+        "data-jam": bisa ? j : null, "data-label": bisa ? `+ ${pad(j)}:00` : null }); // label muncul saat disorot
+      ref.slot.push({ el, j, bisa });
+      slot.push(el);
     }
     const track = h("div", { class: "j-track",
       onclick: (e) => {
@@ -159,15 +163,32 @@ export function halamanJadwal(query = new URLSearchParams()) {
       b.titik.title = label;
     }
 
+    // slot yang waktunya sudah lewat diredupkan dan tidak bisa diklik (backend juga menolaknya)
+    const lewatHari = tanggal < tanggalLokal(d);
+    for (const s of ref.slot) {
+      const lewat = lewatHari || (hariIni && s.j * 60 < m);
+      s.el.classList.toggle("j-lewat", lewat);
+      if (!s.bisa) continue;
+      if (lewat) {
+        delete s.el.dataset.jam;
+        delete s.el.dataset.label;
+        s.el.title = t("jadwal.lewat");
+      } else {
+        s.el.dataset.jam = s.j;
+        s.el.dataset.label = `+ ${pad(s.j)}:00`;
+        s.el.removeAttribute("title");
+      }
+    }
+
     const sfx = hariIni ? "Hari" : "";
     isiKotak(kKegiatan, ref.aktif.length, "jadwal.ket.kegiatan" + sfx, "jadwal.ringkasan.kegiatan" + sfx, animasiAngka);
-    isiKotak(kMenunggu, ref.aktif.filter((p) => p.status === "menunggu").length, "jadwal.ket.menunggu",
-      "jadwal.ringkasan.menunggu", animasiAngka);
+    isiKotak(kMenunggu, ref.aktif.filter((p) => p.status === "menunggu").length, "jadwal.ket.menunggu" + sfx,
+      "jadwal.ringkasan.menunggu" + sfx, animasiAngka);
     kKosong.el.hidden = !hariIni; // "kosong sekarang" hanya untuk hari ini
     isiKotak(kKosong, ref.baris.filter((b) => b.status === "kosong").length, "jadwal.ket.kosong",
       "jadwal.ringkasan.kosong", animasiAngka);
-    isiKotak(kMilik, ref.aktif.filter((p) => pengguna && p.id_pengguna === pengguna.id).length, "jadwal.ket.milikmu",
-      "jadwal.ringkasan.milikmu", animasiAngka);
+    isiKotak(kMilik, ref.aktif.filter((p) => pengguna && p.id_pengguna === pengguna.id).length, "jadwal.ket.milikmu" + sfx,
+      "jadwal.ringkasan.milikmu" + sfx, animasiAngka);
   }
 
   function gambar(gulir) {
@@ -195,6 +216,7 @@ export function halamanJadwal(query = new URLSearchParams()) {
     const idTampil = new Set(kelompok.flatMap((k) => k.daftar.map((r) => r.id)));
     ref = {
       baris: [],
+      slot: [],
       aktif: aktifHari.filter((p) => idTampil.has(p.id_ruangan)), // ringkasan hanya untuk ruangan yang tampil
       garis: h("div", { class: "j-sekarang", "aria-hidden": "true", hidden: true }),
       titik: h("div", { class: "j-titik-sekarang", "aria-hidden": "true", hidden: true }), // div: span di header jam ikut gaya sel jam

@@ -141,8 +141,12 @@ STATUS_RUANGAN = ("tersedia", "dalam perbaikan")
 JAM = re.compile(r"^([01]\d|2[0-3]):[0-5]\d$")
 
 
-def error(pesan, kode=400):
-    return jsonify(error=pesan), kode
+def error(pesan, kode=400, kode_galat=None, **data):
+    """Respons error JSON. kode_galat (opsional) = kode mesin yang dipakai frontend untuk menerjemahkan pesan."""
+    isi = {"error": pesan}
+    if kode_galat:
+        isi.update(kode=kode_galat, data=data)
+    return jsonify(isi), kode
 
 
 def cari(daftar, id_):
@@ -345,7 +349,7 @@ def login():
         return error("Email dan password wajib diisi")
     p = next((p for p in pengguna if p["email"] == email.strip().lower()), None)
     if not p or not check_password_hash(p["password"], pw):
-        return error("Email atau password salah", 401)
+        return error("Email atau password salah", 401, "login_salah")
     return jsonify(publik(p))
 
 
@@ -433,41 +437,50 @@ def cek_peminjaman(data, lama=None):
     for f in ("id_pengguna", "id_ruangan", "tanggal", "jam_mulai", "jam_selesai",
               "jenis_kegiatan", "keperluan", "jumlah_peserta"):
         if h.get(f) in (None, ""):
-            return None, f"Field '{f}' wajib diisi", 400
+            return None, f"Field '{f}' wajib diisi", 400, None
     for f in ("id_pengguna", "id_ruangan", "jumlah_peserta"):
         if not isinstance(h[f], int) or isinstance(h[f], bool):
-            return None, f"'{f}' harus berupa bilangan bulat", 400
+            return None, f"'{f}' harus berupa bilangan bulat", 400, None
     if h["jumlah_peserta"] < 1:
-        return None, "Jumlah peserta minimal 1", 400
+        return None, "Jumlah peserta minimal 1", 400, None
     if not cari(pengguna, h["id_pengguna"]):
-        return None, "Pengguna tidak ditemukan", 400
+        return None, "Pengguna tidak ditemukan", 400, None
     ruang = cari(ruangan, h["id_ruangan"])
     if not ruang:
-        return None, "Ruangan tidak ditemukan", 400
+        return None, "Ruangan tidak ditemukan", 400, None
 
     try:
         datetime.strptime(h["tanggal"], "%Y-%m-%d")
     except (TypeError, ValueError):
-        return None, "Tanggal harus berformat YYYY-MM-DD dan benar-benar ada", 400
+        return None, "Tanggal harus berformat YYYY-MM-DD dan benar-benar ada", 400, None
     for f in ("jam_mulai", "jam_selesai"):
         if not isinstance(h[f], str) or not JAM.match(h[f]):
-            return None, f"'{f}' harus berformat HH:MM, contoh 09:00", 400
+            return None, f"'{f}' harus berformat HH:MM, contoh 09:00", 400, None
     if h["jenis_kegiatan"] not in JENIS_KEGIATAN:
-        return None, "Jenis kegiatan harus salah satu dari: " + ", ".join(JENIS_KEGIATAN), 400
+        return None, "Jenis kegiatan harus salah satu dari: " + ", ".join(JENIS_KEGIATAN), 400, None
     if not isinstance(h["keperluan"], str) or not h["keperluan"].strip():
-        return None, "Keperluan wajib diisi", 400
+        return None, "Keperluan wajib diisi", 400, None
     h["keperluan"] = h["keperluan"].strip()
 
     if ruang["status"] != "tersedia":
-        return None, f"{ruang['nama']} sedang dalam perbaikan dan tidak bisa dipinjam", 400
+        return None, f"{ruang['nama']} sedang dalam perbaikan dan tidak bisa dipinjam", 400, {"kode": "perbaikan", "data": {"ruangan": ruang["nama"]}}
     mulai, selesai = menit(h["jam_mulai"]), menit(h["jam_selesai"])
     if selesai <= mulai:
-        return None, "Jam selesai harus lebih besar dari jam mulai", 400
+        return None, "Jam selesai harus lebih besar dari jam mulai", 400, None
+    # tanggal/jam yang sudah lewat ditolak; peminjaman lama yang waktunya tidak diubah (mis. hanya ganti keperluan) dibiarkan
+    waktu_sama = lama is not None and (lama["tanggal"], lama["jam_mulai"], lama["jam_selesai"]) == (h["tanggal"], h["jam_mulai"], h["jam_selesai"])
+    if not waktu_sama:
+        kini = datetime.now()
+        if h["tanggal"] < kini.date().isoformat():
+            return None, f"Tanggal {h['tanggal']} sudah lewat", 400, {"kode": "lampau_tanggal", "data": {"tanggal": h["tanggal"]}}
+        if h["tanggal"] == kini.date().isoformat() and mulai < kini.hour * 60 + kini.minute:
+            return None, f"Jam mulai {h['jam_mulai']} sudah lewat", 400, {"kode": "lampau_jam", "data": {"jam": h["jam_mulai"]}}
     if mulai < menit(ruang["jam_buka"]) or selesai > menit(ruang["jam_tutup"]):
-        return None, f"{ruang['nama']} hanya buka {ruang['jam_buka']}-{ruang['jam_tutup']}", 400
+        return None, f"{ruang['nama']} hanya buka {ruang['jam_buka']}-{ruang['jam_tutup']}", 400, \
+            {"kode": "jam_buka", "data": {"ruangan": ruang["nama"], "buka": ruang["jam_buka"], "tutup": ruang["jam_tutup"]}}
     if h["jumlah_peserta"] > ruang["kapasitas"]:
         return None, (f"Jumlah peserta ({h['jumlah_peserta']}) melebihi kapasitas "
-                      f"{ruang['nama']} ({ruang['kapasitas']} orang)"), 400
+                      f"{ruang['nama']} ({ruang['kapasitas']} orang)"), 400,             {"kode": "kapasitas", "data": {"peserta": h["jumlah_peserta"], "ruangan": ruang["nama"], "kapasitas": ruang["kapasitas"]}}
 
     bentrok = [p for p in peminjaman
                if p is not lama and p["id_ruangan"] == h["id_ruangan"] and p["tanggal"] == h["tanggal"]
@@ -477,8 +490,12 @@ def cek_peminjaman(data, lama=None):
         saran = jam_kosong_terdekat(ruang, h["tanggal"], mulai, selesai, lama)
         info = (f"Jam kosong terdekat: {jam(saran[0])}-{jam(saran[1])}." if saran
                 else "Tidak ada jam kosong yang cukup di tanggal itu.")
-        return None, f"Jadwal bentrok dengan {daftar}. {info}", 409
-    return h, None, None
+        data_galat = {"kegiatan": bentrok[0]["keperluan"], "mulai": bentrok[0]["jam_mulai"], "selesai": bentrok[0]["jam_selesai"],
+                      "lainnya": len(bentrok) - 1}
+        if saran:
+            data_galat.update(saran_mulai=jam(saran[0]), saran_selesai=jam(saran[1]))
+        return None, f"Jadwal bentrok dengan {daftar}. {info}", 409, {"kode": "bentrok", "data": data_galat}
+    return h, None, None, None
 
 
 def tampil_peminjaman(p):
@@ -504,9 +521,9 @@ def tambah_peminjaman():
     if data is None:
         return error("Body harus berupa JSON object")
     with kunci_peminjaman:
-        h, pesan, kode = cek_peminjaman(data)
+        h, pesan, kode, galat = cek_peminjaman(data)
         if pesan:
-            return error(pesan, kode)
+            return error(pesan, kode, **({"kode_galat": galat["kode"], **galat["data"]} if galat else {}))
         h.update(id=max((p["id"] for p in peminjaman), default=0) + 1, status="menunggu", alasan_penolakan="",
                  dibuat_pada=datetime.now().isoformat(timespec="seconds"))
         peminjaman.append(h)
@@ -523,8 +540,9 @@ def cek_jadwal():
     data = {"jenis_kegiatan": "Lainnya", "keperluan": "-", "jumlah_peserta": 1,
             **{k: v for k, v in data.items() if v not in (None, "")}}
     # id_peminjaman (opsional): peminjaman yang sedang diubah, jangan dihitung sebagai bentrok
-    _, pesan, _ = cek_peminjaman(data, cari(peminjaman, data.get("id_peminjaman")))
-    return jsonify(aman=pesan is None, pesan=pesan or "Jadwal tersedia")
+    _, pesan, _, galat = cek_peminjaman(data, cari(peminjaman, data.get("id_peminjaman")))
+    tambahan = {"kode": galat["kode"], "data": galat["data"]} if galat else {}
+    return jsonify(aman=pesan is None, pesan=pesan or "Jadwal tersedia", **tambahan)
 
 
 # Belum dicek siapa pemiliknya, karena belum ada token/sesi.
@@ -542,9 +560,9 @@ def ubah_peminjaman(id_):
         if data.get("status") == "dibatalkan":  # tombol "Batalkan"
             p["status"] = "dibatalkan"
             return jsonify(tampil_peminjaman(p))
-        h, pesan, kode = cek_peminjaman(data, p)
+        h, pesan, kode, galat = cek_peminjaman(data, p)
         if pesan:
-            return error(pesan, kode)
+            return error(pesan, kode, **({"kode_galat": galat["kode"], **galat["data"]} if galat else {}))
         p.update(h)
         return jsonify(tampil_peminjaman(p))
 

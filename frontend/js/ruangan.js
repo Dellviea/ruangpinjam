@@ -31,7 +31,8 @@ export function halamanRuangan() {
   // "tutup" = di luar jam buka ruangan. aktif = peminjaman menunggu/disetujui ruangan itu hari ini.
   function statusRuangan(r, aktif, m) {
     if (r.status !== "tersedia") return "perbaikan";
-    if (m < menit(r.jam_buka) || m >= menit(r.jam_tutup)) return "tutup";
+    if (m < menit(r.jam_buka)) return "belumbuka";
+    if (m >= menit(r.jam_tutup)) return "tutup";
     const dipakai = aktif.some((p) => p.status === "disetujui" && menit(p.jam_mulai) <= m && m < menit(p.jam_selesai));
     return dipakai ? "dipakai" : "kosong";
   }
@@ -39,7 +40,7 @@ export function halamanRuangan() {
   // Kalimat status di kartu. "Kosong sampai ..." = sampai peminjaman berikutnya (menunggu atau disetujui) atau jam tutup.
   function kalimat(r, status, aktif, m) {
     if (status === "perbaikan") return t("ruangan.kalimat.perbaikan");
-    if (status === "tutup") return t(m < menit(r.jam_buka) ? "ruangan.kalimat.belumBuka" : "ruangan.kalimat.tutup", { jam: r.jam_buka });
+    if (status === "belumbuka" || status === "tutup") return t(status === "belumbuka" ? "ruangan.kalimat.belumBuka" : "ruangan.kalimat.tutup", { jam: r.jam_buka });
     if (status === "dipakai") {
       const p = aktif.find((x) => x.status === "disetujui" && menit(x.jam_mulai) <= m && m < menit(x.jam_selesai));
       return t("ruangan.kalimat.dipakai", { kegiatan: p.keperluan, jam: p.jam_selesai });
@@ -52,7 +53,7 @@ export function halamanRuangan() {
   // abu-abu = di luar jam buka, garis kecil = jam sekarang. Hanya hiasan visual; teksnya ada di aria-label.
   function stripPemakaian(r, aktif) {
     const penanda = h("i", { class: "strip-sekarang", hidden: true });
-    const ringkas = aktif.length ? aktif.map((p) => `${p.jam_mulai}-${p.jam_selesai} ${p.keperluan}`).join(", ") : t("ruangan.stripKosong");
+    const ringkas = aktif.length ? aktif.map((p) => `${p.jam_mulai}–${p.jam_selesai} ${p.keperluan}`).join(", ") : t("ruangan.stripKosong");
     const el = h("div", { class: "strip", role: "img", "aria-label": `${t("ruangan.strip")}: ${ringkas}` },
       h("i", { class: "strip-tutup", style: `left:0;width:${persen(menit(r.jam_buka))}%` }),
       h("i", { class: "strip-tutup", style: `left:${persen(menit(r.jam_tutup))}%;right:0` }),
@@ -60,7 +61,7 @@ export function halamanRuangan() {
         const milik = pengguna && p.id_pengguna === pengguna.id;
         const kiri = persen(menit(p.jam_mulai));
         return h("i", { class: `strip-blok ${milik ? "milik" : "lain"}${p.status === "menunggu" ? " menunggu" : ""}`,
-          style: `left:${kiri}%;width:${persen(menit(p.jam_selesai)) - kiri}%`, title: `${p.jam_mulai}-${p.jam_selesai} · ${p.keperluan}` });
+          style: `left:${kiri}%;width:${persen(menit(p.jam_selesai)) - kiri}%`, title: `${p.jam_mulai}–${p.jam_selesai} · ${p.keperluan}` });
       }),
       penanda);
     return { el, penanda };
@@ -134,7 +135,7 @@ export function halamanRuangan() {
 
     const hari = tanggalLokal();
     const cocok = ruangan
-      .filter((r) => (!jenis || r.jenis === jenis) && r.nama.toLowerCase().includes(kata))
+      .filter((r) => (!jenis || r.jenis === jenis) && (r.nama.toLowerCase().includes(kata) || r.kode.toLowerCase().includes(kata)))
       .sort((a, b) => JENIS_RUANGAN.indexOf(a.jenis) - JENIS_RUANGAN.indexOf(b.jenis) || a.id - b.id);
 
     ref = [];
@@ -177,6 +178,7 @@ export function halamanRuangan() {
     h("div", { class: "r-alat" },
       h("div", { class: "cari" }, ikon("cari"), cari),
       h("div", { class: "pil-baris", role: "group", "aria-label": t("ruangan.filter") }, ...pil)),
+    h("p", { class: "r-bantu" }, t("ruangan.butuh"), " ", h("a", { href: "#/cari" }, t("ruangan.keCari"))),
     jumlah, wadah);
 
   // Perbarui status tiap menit (dicek tiap 15 detik); berhenti sendiri kalau halaman sudah ditinggalkan.

@@ -30,7 +30,16 @@ const IKON = {
   peringatan: '<path d="M12 4 2.5 20h19L12 4zM12 10v4M12 17.5v.01"/>',
   tutup: '<path d="M6 6l12 12M18 6 6 18"/>',
   tambah: '<path d="M12 5v14M5 12h14"/>',
+  jam: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+  kunci: '<path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.6 2.6-2.4-.6-.6-2.4 2.6-2.6z"/>',
 };
+
+// Tabel jadi kartu bertumpuk di HP (css): tiap sel diberi label dari header kolomnya.
+export function beriLabelSel(tabel) {
+  const judul = [...tabel.querySelectorAll("thead th")].map((e) => e.textContent);
+  tabel.querySelectorAll("tbody tr").forEach((tr) => [...tr.children].forEach((td, i) => { if (judul[i]) td.dataset.label = judul[i]; }));
+  return tabel;
+}
 
 // Logo "Denah P": batang tegak, lengkung di atas kembali ke batang, celah pintu di bawah lengkung + daun pintu diagonal pendek.
 // Warna ikut currentColor.

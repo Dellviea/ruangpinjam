@@ -352,8 +352,8 @@ di tiap tab. Tiap tab punya tabel, kolom cari, dan tombol **+ Tambah**.
 - [ ] Telusuri semua halaman dalam bahasa Inggris (Jadwal, Daftar Ruangan, Peminjaman Saya, dan sebagai
       admin Persetujuan dan Kelola Data) mencari **sisa tulisan Indonesia pada menu atau tombol**.
 
-## 4b. Cari Ruangan (halaman baru, menu ke-2 dengan label BARU)
-- [ ] Tab bar atas berurutan: Jadwal, **Cari Ruangan Kosong** (label kecil **BARU**), Daftar Ruangan, Peminjaman Saya.
+## 4b. Cari Ruangan Kosong (halaman baru, menu ke-2)
+- [ ] Tab bar atas berurutan: Jadwal, **Cari Ruangan Kosong** (tanpa label tambahan), Daftar Ruangan, Peminjaman Saya.
 - [ ] Kalimat isian: "Aku butuh ruangan untuk [20] orang, [tanggal] jam [mulai] sampai [selesai]." dengan
       kolom bergaris bawah pink. Mengubah isian membuat hasil **langsung berubah** (tanpa tombol cari).
 - [ ] Jam mulai dan selesai berupa **dropdown per 30 menit (07:00-21:00)**, bukan input jam bawaan (tidak ada
@@ -362,8 +362,9 @@ di tiap tab. Tiap tab punya tabel, kolom cari, dan tombol **+ Tambah**.
       sempit isian terakhir dan titiknya tidak terpisah. Di mode gelap warna isian ikut terang.
 - [ ] Tab bar atas: arahkan kursor ke tab yang tidak aktif → hanya warna teks yang sedikit lebih gelap, **tanpa
       latar**; tab aktif bergaris bawah pink.
-- [ ] Bagian **Tersedia (n)** urut dari kapasitas paling pas; kartu pertama berlabel **Paling pas**; tiap
-      kartu punya bar "20 dari 45 kursi terisi" dan tombol **Ajukan 13:00-15:00** (pink lembut).
+- [ ] Bagian **Tersedia (n)** urut dari kapasitas yang paling sesuai; kartu pertama berlabel **Disarankan** (pink
+      penuh, teks putih kecil) dan hanya tombol Ajukan kartu itu yang pink penuh; kartu lain bergaris dan pink
+      lembut saat disorot. Label ukuran hanya **Agak besar** / **Terlalu besar** (tidak ada label "Pas").
 - [ ] Klik Ajukan → pop-up pengajuan **terisi otomatis** (ruangan, tanggal, jam, jumlah peserta).
 - [ ] Bagian **Tidak tersedia (n)** tampil redup di bawah dengan alasan: perbaikan, kapasitas kurang, bentrok
       (menyebut kegiatan dan jamnya), atau di luar jam buka. Contoh: 13:00-15:00 hari ini → Ruang Kelas 1 bentrok.
@@ -371,7 +372,7 @@ di tiap tab. Tiap tab punya tabel, kolom cari, dan tombol **+ Tambah**.
 - [ ] Sapaan di Jadwal ("Selamat pagi/siang/sore/malam, <nama>") sesuai jam; ada **4 kotak ringkasan** (kegiatan
       hari ini, menunggu, ruangan kosong sekarang, jadwal milikmu).
 - [ ] Aturan warna: pink penuh hanya untuk satu tombol utama per layar (mis. Ajukan peminjaman), tombol
-      berulang (Pinjam, Setujui, Ajukan di hasil cari) pink lembut atau bergaris.
+      berulang (Ajukan di kartu, Setujui) pink lembut atau bergaris.
 
 ## 5. Mode tampilan (Terang | Gelap | Sistem)
 - [ ] Tombol kecil berbentuk **kapsul** (jalur pink lembut tanpa garis; pilihan aktif = kapsul putih bayangan tipis yang **meluncur** ke pilihan baru, ~0,2 detik, diam bila animasi dimatikan) tanpa label ada di **pojok kanan atas area konten**, sejajar judul halaman: **ID | EN** dan
@@ -468,11 +469,60 @@ cd pinjamruang\backend
       melayang, tanpa biru, tanpa gerak).
 - [ ] **Menu profil:** klik avatar + nama → menu kecil (nama, peran, tombol **Keluar**); tutup dengan klik di luar
       atau **Esc** (fokus kembali ke avatar). Keluar hanya lewat tombol di menu.
-- [ ] **HP:** geser menu tab ke samping; teks "Cari Ruangan Kosong BARU" dan "Daftar Ruangan" tidak saling menimpa
+- [ ] **HP:** geser menu tab ke samping; teks "Cari Ruangan Kosong" dan "Daftar Ruangan" tidak saling menimpa
       (cek juga di lebar 320px).
 - [ ] **Cari Ruangan Kosong:** kartu pertama berlabel **Disarankan** tanpa label "Pas" tambahan; kartu lain tetap
-      berlabel ukuran (Pas / Agak besar / Terlalu besar).
+      berlabel ukuran (Agak besar / Terlalu besar; ukuran pas tanpa label).
 - [ ] Cek juga mode gelap, bahasa Inggris, dan HP untuk semua halaman.
+
+## 12. Rapikan tipografi, bar atas, tab, Cari, Daftar Ruangan
+- [ ] **Skala huruf konsisten:** angka tanggal besar 64px; judul halaman dan angka ringkasan 28px; kalimat isian
+      Cari 22px; judul kartu dan judul pop-up 18px (jelas lebih kecil dari judul halaman); nama ruangan di
+      semua tabel 15px tebal; teks isi 14px; tombol tidak lebih besar dari teks isi. Di HP: judul 24px, angka
+      tanggal 48px. Ukuran disimpan sebagai variabel `--fs-*` di `css/warna.css`.
+- [ ] **Bar atas** setinggi 60-64px; logo 28px sejajar tulisan; kapsul ID|EN, kapsul mode, dan tombol avatar
+      sama tinggi (36px); avatar = lingkaran inisial + nama tanpa kotak, pink lembut saat disorot; garis bawah
+      bar jelas; tidak ada label BARU.
+- [ ] **Tab status** (Peminjaman Saya, Kelola Data): garis bawah pink; angka jumlah berupa kapsul kecil mono
+      (tab aktif pink lembut, tab lain abu muda).
+- [ ] **Cari Ruangan Kosong:** kalimat bantu di bawah judul; kalimat isian di dalam panel putih; tiap isian
+      berlatar pink lembut dengan tanda ▾ (klik apa pun membuka pilihan/pemilih tanggal); teks "Klik bagian
+      berwarna untuk mengubah."; tombol **Cari** di kanan panel (hasil juga otomatis berubah; tombol menggulir
+      ke hasil); tidak ada spasi sebelum titik di akhir kalimat.
+- [ ] **Tidak tersedia** dilipat: tombol "Tampilkan N ruangan tidak tersedia" / "Sembunyikan"; kartunya redup,
+      alasan berwarna abu dengan ikon (orang = kapasitas kurang, jam = bentrok, kunci inggris = perbaikan).
+      Untuk bentrok ada tautan kecil **Kosong mulai HH:MM** yang mengganti jam di kalimat ke jam kosong terdekat.
+- [ ] **Daftar Ruangan:** placeholder "Cari nama atau kode ruangan…" (cari `AUL-02` atau `tult-0604`), dan tautan
+      "Butuh ruangan kosong di jam tertentu? Cari Ruangan Kosong →".
+- [ ] Cek juga mode gelap, bahasa Inggris, dan HP untuk semua halaman di atas.
+
+## 13. Perbaikan dari audit pengguna awam
+- [ ] **HP (lebar 390px)** — Peminjaman Saya, Persetujuan, Kelola Data tampil sebagai **kartu bertumpuk** (label
+      kecil di kiri tiap isian) dan tombol aksi (Ubah/Batalkan/Setujui/Tolak/Hapus) ada di **bawah tiap kartu**,
+      terlihat penuh tanpa geser ke samping. Di laptop tetap tabel biasa.
+- [ ] **Tanggal/jam lewat ditolak:** di pop-up, pilih tanggal kemarin → pesan "Tanggal itu sudah lewat…" dan tombol
+      Ajukan nonaktif (kolom tanggal juga tidak menawarkan hari lampau). Di Cari Ruangan Kosong, tanggal kemarin
+      atau jam hari ini yang sudah lewat → petunjuk "Waktu yang dipilih sudah lewat…", tanpa hasil. Di Jadwal, slot
+      yang sudah lewat **redup, kursor tidak boleh, tidak bisa diklik** dan ikut berubah tiap menit; di tanggal
+      kemarin semua slot redup.
+- [ ] **Jadwal:** geser tabel ke kanan sampai blok kegiatan tertutup kolom ruangan → **teks blok tetap terbaca**
+      (menempel di tepi kiri area terlihat).
+- [ ] **Istilah "Ajukan"** di semua aksi (Jadwal, Daftar Ruangan, Cari, pop-up; EN "Request"). Pop-up baru ada catatan
+      "Pengajuan akan menunggu persetujuan admin." dan tombol penutupnya **Tutup** (EN Close).
+- [ ] **Peminjaman Saya:** status Disetujui bertulis "Hubungi admin untuk membatalkan"; ada tombol utama
+      **Ajukan peminjaman** di kanan atas (pink, satu-satunya).
+- [ ] **Kelola Data:** tombol **Hapus nonaktif** untuk ruangan/pengguna yang masih punya peminjaman, dengan tulisan
+      terlihat "Masih punya N peminjaman" (juga alasan untuk akun sendiri dan Ubah yang nonaktif).
+- [ ] **Register:** kirim form kosong → "Nama lengkap wajib diisi" (kolom itu ditandai dan terfokus, tanpa kirim ke
+      server); juga cek format email, password minimal 6 karakter, dan password tidak sama.
+- [ ] **Pesan error ikut bahasa:** login salah, kapasitas, bentrok, jam buka, perbaikan, tanggal lewat tampil
+      Inggris saat bahasa EN (dan Indonesia saat ID).
+- [ ] **Ringkasan Jadwal:** "menunggu persetujuan (hari ini)" dan "jadwalmu hari ini" (tanggal lain tanpa kata
+      hari ini).
+- [ ] **Status kartu ruangan:** sebelum jam buka "Belum buka", sesudah jam tutup "Sudah tutup" (abu di pita).
+- [ ] **Format seragam:** tanggal "Sel, 24 Nov 2026" dan jam "13:00–15:00" (tanda – bukan -) di semua tabel,
+      konfirmasi, tombol, dan Cari. Kapasitas: "35 peserta dari kapasitas 45" di Persetujuan, "Kapasitas 200 orang"
+      di pop-up. (Kotak tanggal bawaan browser di pop-up tetap mengikuti pengaturan browser.)
 
 ## Catatan temuan
 | No | Bagian / langkah | Yang terjadi | Yang diharapkan | Tingkat (kecil/sedang/besar) |
