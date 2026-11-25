@@ -30,25 +30,27 @@ export function halamanCari() {
   let animasiMasuk = true; // hasil muncul berurutan hanya pada tampilan pertama, bukan tiap ketikan
 
   const awal = isianAwal();
-  // Isian di dalam kalimat: kotak pink lembut, garis bawah aksen, tanda ▾; hasil langsung diperbarui saat berubah.
-  const peserta = h("input", { class: "isian-kontrol ii-angka", type: "number", min: "1", max: "999", value: "20",
-    "aria-label": t("cari.aria.peserta"), oninput: gambar, onchange: gambar });
+  // Bar pencarian bersegmen: tiap kolom = label kecil + nilai; seluruh kolom bisa diklik. Hasil langsung diperbarui saat berubah.
+  const kolom = (kunci, kontrol, ...lain) => h("label", { class: "cari-kolom", onclick: (e) => {
+    if (e.target === kontrol) return;
+    try { kontrol.showPicker(); } catch { kontrol.focus(); } // dropdown/tanggal dibuka; input angka cukup difokus
+  } }, h("span", { class: "cari-label" }, t(kunci)), kontrol, ...lain);
+  const peserta = h("input", { class: "cari-nilai", type: "number", min: "1", max: "999", value: "20", "aria-label": t("cari.peserta"),
+    oninput: gambar, onchange: gambar });
   const pilihJam = (nilai, label) => {
-    const el = h("select", { class: "isian-kontrol ii-jam", "aria-label": label, oninput: gambar, onchange: gambar },
+    const el = h("select", { class: "cari-nilai", "aria-label": label, oninput: gambar, onchange: gambar },
       ...PILIHAN_JAM.map((j) => h("option", { value: j }, j)));
     el.value = nilai;
     return el;
   };
-  const mulai = pilihJam(awal.mulai, t("cari.aria.mulai"));
-  const selesai = pilihJam(awal.selesai, t("cari.aria.selesai"));
-  const bungkus = (el) => h("span", { class: "isian-inline" }, el);
-  // Tanggal tampil sebagai teks pendek; input tanggal asli transparan di atasnya dan membuka pemilih saat diklik.
+  const mulai = pilihJam(awal.mulai, t("cari.mulai"));
+  const selesai = pilihJam(awal.selesai, t("cari.selesai"));
+  // Tanggal tampil sebagai teks pendek; input tanggal asli transparan menutupi kolom dan membuka pemilih saat diklik.
   const bukaPemilih = (e) => { try { e.target.showPicker(); } catch { /* browser lama: input biasa */ } };
-  const teksTanggal = h("span", { "aria-hidden": "true" }, tanggalRingkas(awal.tanggal));
-  const tanggal = h("input", { class: "ii-tanggal-input", type: "date", min: tanggalLokal(), value: awal.tanggal, "aria-label": t("cari.aria.tanggal"),
+  const teksTanggal = h("span", { class: "cari-nilai", "aria-hidden": "true" }, tanggalRingkas(awal.tanggal));
+  const tanggal = h("input", { class: "cari-nilai", type: "date", min: tanggalLokal(), value: awal.tanggal, "aria-label": t("cari.tanggal"),
     onclick: bukaPemilih, onkeydown: (e) => e.key === "Enter" && bukaPemilih(e),
     oninput: ubahTanggal, onchange: ubahTanggal });
-  const kolomTanggal = h("label", { class: "isian-inline ii-tanggal" }, teksTanggal, tanggal);
   function ubahTanggal() {
     teksTanggal.textContent = tanggal.value ? tanggalRingkas(tanggal.value) : "—";
     gambar();
@@ -190,12 +192,11 @@ export function halamanCari() {
   muat();
   return h("div", {},
     h("p", { class: "cari-sub" }, t("cari.sub")),
-    h("div", { class: "cari-panel" },
-      h("div", { class: "cari-isi" },
-        h("p", { class: "cari-kalimat" },
-          t("cari.k1"), " ", bungkus(peserta), " ", t("cari.k2"), " ", kolomTanggal, " ", t("cari.k3"), " ", bungkus(mulai), " ", t("cari.k4"), " ",
-          h("span", { class: "tak-pisah" }, bungkus(selesai), ".")), // isian terakhir dan titiknya tidak boleh terpisah baris
-        h("p", { class: "cari-bantu" }, t("cari.bantu"))),
+    h("div", { class: "cari-bar", role: "search" },
+      kolom("cari.peserta", peserta),
+      kolom("cari.tanggal", tanggal, teksTanggal),
+      kolom("cari.mulai", mulai),
+      kolom("cari.selesai", selesai),
       h("button", { class: "tombol cari-tombol", type: "button", onclick: cariUlang }, ikon("cari", 16), t("cari.tombol"))),
     hasil);
 }

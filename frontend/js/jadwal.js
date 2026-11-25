@@ -297,6 +297,7 @@ export function halamanJadwal(query = new URLSearchParams()) {
     ["sw-tutup", "jadwal.tutup"]];
 
   const halaman = h("div", { class: "jadwal" },
+   h("div", { class: "pita-kepala" },
     h("div", { class: "j-kepala-halaman" },
       h("label", { class: "j-tgl" }, angkaTgl, inputTanggal),
       h("div", { class: "j-kepala-teks" },
@@ -313,7 +314,7 @@ export function halamanJadwal(query = new URLSearchParams()) {
         filter,
         h("button", { class: "tombol tombol-kecil", type: "button", onclick: () => ajukan(null, null) },
           ikon("tambah"), t("jadwal.ajukan")))),
-    ringkasan,
+    ringkasan),
     h("div", { class: "j-legenda" },
       ...LEGENDA.map(([kelas, kunci]) => h("span", {}, h("i", { class: "sw " + kelas }), t(kunci))),
       h("span", {}, t("jadwal.petunjuk"))),

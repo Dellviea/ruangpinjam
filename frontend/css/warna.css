@@ -3,10 +3,12 @@
 :root {
   color-scheme: light;
 
-  --latar: #F6F1F4;
+  --latar: #F4F4F6;
   --panel: #FFFFFF;
-  --garis: #E6DEE3;
-  --garis-halus: #EEE7EB;
+  --garis: #E4E4E8;
+  --garis-halus: #EDEDF0;
+  --pita-kepala: #FBF2F6;      /* pita area judul tiap halaman */
+  --pita-kepala-garis: #F0DCE6;
 
   --teks: #16131A;
   --teks-2: #463F48;
@@ -61,10 +63,12 @@
 :root[data-tema="gelap"] {
   color-scheme: dark;
 
-  --latar: #171316;
-  --panel: #1F1B20;
-  --garis: #3A3238;
+  --latar: #141416;
+  --panel: #1C1C20;
+  --garis: #34343B;
   --garis-halus: #2A2A30;
+  --pita-kepala: #221A20;
+  --pita-kepala-garis: #3A2A33;
 
   --teks: #F3EEF1;
   --teks-2: #CFC6CC;
