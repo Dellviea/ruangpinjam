@@ -10,6 +10,7 @@ After=network.target
 User=GANTI_USER
 WorkingDirectory=/opt/pinjamruang/backend
 EnvironmentFile=/opt/pinjamruang/backend/.env
+Environment=TZ=Asia/Jakarta
 
 # WAJIB --workers 1: data disimpan di memori satu proses (tanpa database).
 # Dengan 2 worker atau lebih, tiap worker punya salinan data sendiri dan jadwal bentrok bisa lolos.

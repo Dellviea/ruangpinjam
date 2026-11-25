@@ -2,8 +2,6 @@
 
 PinjamRuang adalah aplikasi web peminjaman ruangan kampus. Mahasiswa bisa melihat jadwal semua ruangan, mencari ruangan yang kosong, mengajukan peminjaman, dan memantau statusnya. Admin (bagian sarana dan prasarana) menyetujui atau menolak pengajuan serta mengelola data. Sistem otomatis menolak jadwal yang bentrok, peserta yang melebihi kapasitas, ruangan yang sedang diperbaiki, dan waktu yang sudah lewat.
 
-![Halaman Jadwal PinjamRuang](docs/jadwal.png)
-
 ## Fitur utama
 
 **Mahasiswa**
@@ -53,7 +51,6 @@ pinjamruang/
   backend/    app.py, requirements.txt, .env.example, test_*.py
   frontend/   index.html, css/, js/
   deploy/     pinjamruang.service (systemd), nginx-pinjamruang.conf (nginx)
-  docs/       gambar untuk README
 ```
 
 ## Menjalankan di laptop (Windows)
@@ -118,7 +115,11 @@ Di daftar VM, klik tombol **SSH** pada baris `pinjamruang` (terminal terbuka di 
 ```bash
 sudo apt update
 sudo apt install -y python3-venv python3-pip nginx git
+sudo timedatectl set-timezone Asia/Jakarta
+timedatectl
 ```
+
+Baris `Time zone` pada hasil `timedatectl` harus tertulis `Asia/Jakarta`. Langkah ini perlu karena VM Ubuntu memakai UTC (7 jam di belakang WIB), padahal aplikasi memakai jam server untuk menolak tanggal dan jam yang sudah lewat serta untuk data contoh.
 
 ### d. Ambil kode dan siapkan backend
 
@@ -239,6 +240,14 @@ Penyebab yang sering: `.venv` belum dibuat atau `pip install` belum dijalankan, 
 - IP eksternal mungkin berubah setelah VM dinyalakan ulang.
 
 **403 Forbidden atau halaman default nginx.** Pastikan repo ada di `/opt/pinjamruang` dan situs bawaan sudah dihapus: `sudo rm -f /etc/nginx/sites-enabled/default`, lalu `sudo systemctl restart nginx`.
+
+**Jam/tanggal di aplikasi tidak sesuai.** Cek zona waktu VM dengan `timedatectl`. Kalau bukan `Asia/Jakarta`, atur lalu muat ulang service:
+
+```bash
+sudo timedatectl set-timezone Asia/Jakarta
+sudo systemctl daemon-reload
+sudo systemctl restart pinjamruang
+```
 
 **Perubahan tidak muncul.** Jalankan `git pull`, `sudo systemctl restart pinjamruang`, lalu tekan **Ctrl+F5** di browser.
 
