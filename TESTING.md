@@ -524,6 +524,17 @@ cd pinjamruang\backend
       konfirmasi, tombol, dan Cari. Kapasitas: "35 peserta dari kapasitas 45" di Persetujuan, "Kapasitas 200 orang"
       di pop-up. (Kotak tanggal bawaan browser di pop-up tetap mengikuti pengaturan browser.)
 
+## 14. Warna latar, pita kepala, bar Cari
+
+- [ ] Mode terang: latar abu netral (bukan pink), panel putih. Mode gelap: latar #141416, kartu #1C1C20.
+- [ ] Tiap halaman: area judul berada di pita pink sangat muda (gelap: ungu tua) dengan garis bawah tipis; di Jadwal pita memuat angka tanggal, sapaan, tombol hari, dan ringkasan.
+- [ ] Tombol Kemarin/Hari ini/Besok dan filter jenis di pita berlatar putih (bukan pink muda).
+- [ ] Cari Ruangan Kosong: satu bar dengan 4 kolom (Jumlah orang, Tanggal, Jam mulai, Jam selesai), tombol Cari di ujung kanan setinggi bar; tidak ada kalimat atau teks "Klik bagian berwarna".
+- [ ] Klik di mana saja pada satu kolom membuka isiannya (angka fokus, tanggal membuka kalender, jam membuka dropdown); hover/fokus kolom jadi pink muda.
+- [ ] Ubah isian: daftar hasil langsung berubah tanpa menekan Cari.
+- [ ] HP: kolom jadi 2x2, tombol Cari selebar penuh di bawah, tidak ada gulir samping.
+- [ ] Bahasa Inggris: label People, Date, Start time, End time, tombol Search.
+
 ## Catatan temuan
 | No | Bagian / langkah | Yang terjadi | Yang diharapkan | Tingkat (kecil/sedang/besar) |
 |---|---|---|---|---|
